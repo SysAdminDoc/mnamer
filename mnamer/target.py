@@ -164,6 +164,8 @@ class Target:
             )
             or None
         )
+        if self._settings.language:
+            path_data["language"] = self._settings.language
         self.metadata.language = path_data.get("language")
         self.metadata.group = path_data.get("release_group")
         self.metadata.container = file_path.suffix or None
