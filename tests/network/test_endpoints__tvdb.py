@@ -12,7 +12,7 @@ from mnamer.endpoints import (
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
 from mnamer.language import Language
 from mnamer.providers import Tvdb
-from tests import JUNK_TEXT, RUSSIAN_LANG
+from tests import JUNK_TEXT, RUSSIAN_LANG, assert_has_keys
 
 pytestmark = [
     pytest.mark.network,
@@ -122,7 +122,7 @@ def test_tvdb_episodes_id__success(tvdb_token):
     result = tvdb_episodes_id(tvdb_token, LOST_TVDB_ID_EPISODE)
     assert isinstance(result, dict)
     assert "data" in result
-    assert set(result["data"].keys()) == EXPECTED_TOP_LEVEL_SHOW_KEYS
+    assert_has_keys(result["data"], EXPECTED_TOP_LEVEL_SHOW_KEYS)
     assert str(result["data"]["seriesId"]) == LOST_TVDB_ID_SERIES
     assert str(result["data"]["id"]) == LOST_TVDB_ID_EPISODE
 
@@ -198,7 +198,7 @@ def test_tvdb_series_id__success(tvdb_token):
     result = tvdb_series_id(tvdb_token, LOST_TVDB_ID_SERIES)
     assert isinstance(result, dict)
     assert "data" in result
-    assert set(result["data"].keys()) == expected_top_level_keys
+    assert_has_keys(result["data"], expected_top_level_keys)
     assert str(result["data"]["id"]) == LOST_TVDB_ID_SERIES
     assert result["data"]["seriesName"] == "Lost"
 
@@ -239,7 +239,7 @@ def test_tvdb_series_id_episodes__success(tvdb_token):
     assert isinstance(result, dict)
     assert "data" in result
     entry = result["data"][0]
-    assert set(entry.keys()) == EXPECTED_TOP_LEVEL_SHOW_KEYS
+    assert_has_keys(entry, EXPECTED_TOP_LEVEL_SHOW_KEYS)
     assert str(entry["id"]) == LOST_TVDB_ID_EPISODE
 
 
@@ -302,8 +302,7 @@ def test_tvdb_series_id_episodes_query__success_id_tvdb(tvdb_token):
     assert "data" in result
     data = result["data"]
     assert len(data) == 100
-    actual_top_level_keys = set(data[0].keys())
-    assert actual_top_level_keys == EXPECTED_TOP_LEVEL_SHOW_KEYS
+    assert_has_keys(data[0], EXPECTED_TOP_LEVEL_SHOW_KEYS)
     assert str(data[0]["id"]) == LOST_TVDB_ID_EPISODE
 
 
@@ -312,8 +311,7 @@ def test_tvdb_series_id_episodes_query__success_id_tvdb_season(tvdb_token):
     assert isinstance(result, dict)
     assert "data" in result
     data = result["data"]
-    actual_top_level_keys = set(data[0].keys())
-    assert actual_top_level_keys == EXPECTED_TOP_LEVEL_SHOW_KEYS
+    assert_has_keys(data[0], EXPECTED_TOP_LEVEL_SHOW_KEYS)
     assert str(data[0]["id"]) == LOST_TVDB_ID_EPISODE
     assert result["links"]["prev"] is None
     assert result["links"]["next"] is None
@@ -328,8 +326,7 @@ def test_tvdb_series_id_episodes_query__success_id_tvdb_season_episode(
     assert isinstance(result, dict)
     assert "data" in result
     data = result["data"]
-    actual_top_level_keys = set(data[0].keys())
-    assert actual_top_level_keys == EXPECTED_TOP_LEVEL_SHOW_KEYS
+    assert_has_keys(data[0], EXPECTED_TOP_LEVEL_SHOW_KEYS)
     assert str(data[0]["id"]) == LOST_TVDB_ID_EPISODE
     assert result["links"]["prev"] is None
     assert result["links"]["next"] is None
@@ -385,8 +382,7 @@ def test_tvdb_search_series__success(tvdb_token):
     assert "data" in result
     data = result["data"]
     assert len(data) == 100
-    actual_top_level_keys = set(data[0].keys())
-    assert actual_top_level_keys == expected_top_level_keys
+    assert_has_keys(data[0], expected_top_level_keys)
 
 
 def test_tvdb_search_series__language(tvdb_token):
