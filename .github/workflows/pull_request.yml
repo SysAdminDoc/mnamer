@@ -26,6 +26,8 @@ jobs:
       - name: Testing (contributor)
         uses: ./.github/actions/test
         if: github.actor != 'dependabot[bot]'
+        env:
+          API_KEY_OMDB: ${{ secrets.API_KEY_OMDB }}
         with:
           local: true
           network: true

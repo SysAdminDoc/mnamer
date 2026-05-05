@@ -27,6 +27,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/init
       - uses: ./.github/actions/test
+        env:
+          API_KEY_OMDB: ${{ secrets.API_KEY_OMDB }}
         with:
           local: true
           network: true
