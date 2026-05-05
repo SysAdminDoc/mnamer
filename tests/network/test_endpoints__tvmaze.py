@@ -10,7 +10,7 @@ from mnamer.endpoints import (
     tvmaze_show_single_search,
 )
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
-from tests import EPISODE_META, JUNK_TEXT, TEST_DATE
+from tests import EPISODE_META, JUNK_TEXT, TEST_DATE, assert_has_keys
 
 pytestmark = [
     pytest.mark.network,
@@ -106,7 +106,7 @@ def test_tvmaze_show_search__success():
     expected_top_level_keys = {"score", "show"}
     assert results
     result = results[0]
-    assert expected_top_level_keys == set(result)
+    assert_has_keys(result, expected_top_level_keys)
     for expected_show_key in EXPECTED_SHOW_KEYS:
         assert expected_show_key in result["show"]
     assert result["show"]["id"] == META["id_tvmaze"]

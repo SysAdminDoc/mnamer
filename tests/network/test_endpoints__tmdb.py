@@ -3,7 +3,7 @@ import pytest
 from mnamer.endpoints import tmdb_find, tmdb_movies, tmdb_search_movies
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
 from mnamer.providers import Tmdb
-from tests import JUNK_TEXT, RUSSIAN_LANG
+from tests import JUNK_TEXT, RUSSIAN_LANG, assert_has_keys
 
 pytestmark = [
     pytest.mark.network,
@@ -36,6 +36,7 @@ def test_tmdb_find__imdb_success():
         "poster_path",
         "popularity",
         "release_date",
+        "softcore",
         "title",
         "video",
         "vote_average",
@@ -43,11 +44,9 @@ def test_tmdb_find__imdb_success():
     }
     result = tmdb_find(Tmdb.api_key, "imdb_id", GOONIES_IMDB_ID)
     assert isinstance(result, dict)
-    assert set(result.keys()).issuperset(expected_top_level_keys)
+    assert_has_keys(result, expected_top_level_keys)
     assert len(result.get("movie_results", {})) > 0
-    assert expected_movie_results_keys.issuperset(
-        set(result.get("movie_results", {})[0].keys())
-    )
+    assert_has_keys(result["movie_results"][0], expected_movie_results_keys)
 
 
 def test_tmdb_find__api_key_fail():
@@ -105,7 +104,7 @@ def test_tmdb_movies__success():
     }
     result = tmdb_movies(Tmdb.api_key, GOONIES_TMDB_ID)
     assert isinstance(result, dict)
-    assert set(result.keys()).issuperset(expected_top_level_keys)
+    assert_has_keys(result, expected_top_level_keys)
     assert result.get("title") == "The Goonies"
 
 
@@ -148,6 +147,7 @@ def test_tmdb_search_movies__success():
         "popularity",
         "poster_path",
         "release_date",
+        "softcore",
         "title",
         "video",
         "vote_average",
@@ -155,9 +155,9 @@ def test_tmdb_search_movies__success():
     }
     result = tmdb_search_movies(Tmdb.api_key, "the goonies", 1985)
     assert isinstance(result, dict)
-    assert set(result.keys()).issuperset(expected_top_level_keys)
+    assert_has_keys(result, expected_top_level_keys)
     assert isinstance(result["results"], list)
-    assert expected_results_keys.issuperset(set(result.get("results", [{}])[0].keys()))
+    assert_has_keys(result["results"][0], expected_results_keys)
     assert result["results"][0]["original_title"] == "The Goonies"
     result = tmdb_search_movies(Tmdb.api_key, "the goonies")
     assert len(result["results"]) > 1

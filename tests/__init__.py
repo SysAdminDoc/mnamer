@@ -1,4 +1,5 @@
 import datetime as dt
+from collections.abc import Mapping, Set
 from typing import Any, NamedTuple
 
 from mnamer.const import SUBTITLE_CONTAINERS
@@ -120,3 +121,8 @@ class MockRequestResponse:
         from json import loads
 
         return loads(self.content)
+
+
+def assert_has_keys(actual: Mapping[str, object], expected: Set[str]) -> None:
+    """Assert every key in `expected` is present in `actual`; extras are ignored."""
+    assert expected <= actual.keys(), expected - actual.keys()

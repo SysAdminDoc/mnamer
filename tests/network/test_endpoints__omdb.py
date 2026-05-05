@@ -5,7 +5,7 @@ import pytest
 from mnamer.endpoints import omdb_search, omdb_title
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
 from mnamer.providers import Omdb
-from tests import JUNK_TEXT, MockRequestResponse
+from tests import JUNK_TEXT, MockRequestResponse, assert_has_keys
 
 pytestmark = [
     pytest.mark.network,
@@ -73,7 +73,7 @@ def test_omdb_title__media__movie():
         "Year",
     }
     result = omdb_title(Omdb.api_key, media="movie", title="ninja turtles")
-    assert expected_top_level_keys.issuperset(set(result.keys()))
+    assert_has_keys(result, expected_top_level_keys)
     assert result["Response"]
     assert result["Type"] == "movie"
     assert result["Title"] == "Teenage Mutant Ninja Turtles"
@@ -106,7 +106,7 @@ def test_omdb_title__media__series():
     }
 
     result = omdb_title(Omdb.api_key, media="series", title="ninja turtles")
-    assert set(result.keys()).issuperset(expected_top_level_keys)
+    assert_has_keys(result, expected_top_level_keys)
     assert result["Response"]
     assert result["Type"] == "series"
     assert result["Title"] == "Teenage Mutant Ninja Turtles"
@@ -135,13 +135,13 @@ def test_omdb_title__invalid_plot():
 def test_omdb_search__fields__top_level():
     expected_fields = {"Search", "Response", "totalResults"}
     result = omdb_search(Omdb.api_key, "ninja turtles")
-    assert set(result.keys()) == expected_fields
+    assert_has_keys(result, expected_fields)
 
 
 def test_omdb_search__fields__search():
     expected_fields = {"Title", "Year", "imdbID", "Type", "Poster"}
     result = omdb_search(Omdb.api_key, "ninja turtles")["Search"][0]
-    assert set(result.keys()) == expected_fields
+    assert_has_keys(result, expected_fields)
 
 
 def test_omdb_search__query__movie():
