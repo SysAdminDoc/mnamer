@@ -21,39 +21,39 @@ pytestmark = [
 ]
 
 EXPECTED_TOP_LEVEL_SHOW_KEYS = {
-    "absoluteNumber",
-    "airedEpisodeNumber",
-    "airedSeason",
-    "airedSeasonID",
-    "airsAfterSeason",
-    "airsBeforeEpisode",
-    "airsBeforeSeason",
-    "contentRating",
+    "absolute_number",
+    "aired_episode_number",
+    "aired_season",
+    "aired_season_id",
+    "airs_after_season",
+    "airs_before_episode",
+    "airs_before_season",
+    "content_rating",
     "directors",
-    "dvdChapter",
-    "dvdDiscid",
-    "dvdEpisodeNumber",
-    "dvdSeason",
-    "episodeName",
+    "dvd_chapter",
+    "dvd_discid",
+    "dvd_episode_number",
+    "dvd_season",
+    "episode_name",
     "filename",
-    "firstAired",
-    "guestStars",
+    "first_aired",
+    "guest_stars",
     "id",
-    "imdbId",
-    "isMovie",
+    "imdb_id",
+    "is_movie",
     "language",
-    "lastUpdated",
-    "lastUpdatedBy",
+    "last_updated",
+    "last_updated_by",
     "overview",
-    "productionCode",
-    "seriesId",
-    "showUrl",
-    "siteRating",
-    "siteRatingCount",
-    "thumbAdded",
-    "thumbAuthor",
-    "thumbHeight",
-    "thumbWidth",
+    "production_code",
+    "series_id",
+    "show_url",
+    "site_rating",
+    "site_rating_count",
+    "thumb_added",
+    "thumb_author",
+    "thumb_height",
+    "thumb_width",
     "writers",
 }
 
@@ -123,13 +123,13 @@ def test_tvdb_episodes_id__success(tvdb_token):
     assert isinstance(result, dict)
     assert "data" in result
     assert_has_keys(result["data"], EXPECTED_TOP_LEVEL_SHOW_KEYS)
-    assert str(result["data"]["seriesId"]) == LOST_TVDB_ID_SERIES
+    assert str(result["data"]["series_id"]) == LOST_TVDB_ID_SERIES
     assert str(result["data"]["id"]) == LOST_TVDB_ID_EPISODE
 
 
 def test_tvdb_episodes_id__language(tvdb_token):
     result = tvdb_episodes_id(tvdb_token, LOST_TVDB_ID_EPISODE, RUSSIAN_LANG)
-    assert result["data"]["episodeName"] == "Пилот (1)"
+    assert result["data"]["episode_name"] == "Пилот (1)"
 
 
 def test_tvdb_episodes_id__language__invalid(tvdb_token):
@@ -167,32 +167,32 @@ def test_tvdb_series_id__no_hits(tvdb_token):
 def test_tvdb_series_id__success(tvdb_token):
     expected_top_level_keys = {
         "added",
-        "addedBy",
-        "airsDayOfWeek",
-        "airsTime",
+        "added_by",
+        "airs_day_of_week",
+        "airs_time",
         "aliases",
         "banner",
         "fanart",
-        "firstAired",
+        "first_aired",
         "genre",
         "id",
-        "imdbId",
+        "imdb_id",
         "language",
-        "lastUpdated",
+        "last_updated",
         "network",
-        "networkId",
+        "network_id",
         "overview",
         "poster",
         "rating",
         "runtime",
         "season",
-        "seriesId",
-        "seriesName",
-        "siteRating",
-        "siteRatingCount",
+        "series_id",
+        "series_name",
+        "site_rating",
+        "site_rating_count",
         "slug",
         "status",
-        "zap2itId",
+        "zap2it_id",
     }
 
     result = tvdb_series_id(tvdb_token, LOST_TVDB_ID_SERIES)
@@ -200,12 +200,12 @@ def test_tvdb_series_id__success(tvdb_token):
     assert "data" in result
     assert_has_keys(result["data"], expected_top_level_keys)
     assert str(result["data"]["id"]) == LOST_TVDB_ID_SERIES
-    assert result["data"]["seriesName"] == "Lost"
+    assert result["data"]["series_name"] == "Lost"
 
 
 def test_tvdb_series_id__language(tvdb_token):
     result = tvdb_series_id(tvdb_token, THE_WITCHER_ID_SERIES, RUSSIAN_LANG)
-    assert result["data"]["seriesName"] == "Ведьмак"
+    assert result["data"]["series_name"] == "Ведьмак"
 
 
 @pytest.mark.xfail(strict=False)
@@ -247,7 +247,7 @@ def test_tvdb_series_id_episodes__language(tvdb_token):
     result = tvdb_series_id_episodes(
         tvdb_token, THE_WITCHER_ID_SERIES, language=RUSSIAN_LANG
     )
-    assert result["data"][0]["episodeName"] == "Начало конца"
+    assert result["data"][0]["episode_name"] == "Начало конца"
 
 
 @pytest.mark.xfail(strict=False)
@@ -340,7 +340,7 @@ def test_tvdb_series_id_episodes_query(tvdb_token):
         episode=1,
         language=RUSSIAN_LANG,
     )
-    assert result["data"][0]["episodeName"] == "Начало конца"
+    assert result["data"][0]["episode_name"] == "Начало конца"
 
 
 def test_tvdb_search_series__invalid_token():
@@ -367,13 +367,13 @@ def test_tvdb_search_series__success(tvdb_token):
     expected_top_level_keys = {
         "aliases",
         "banner",
-        "firstAired",
+        "first_aired",
         "id",
         "image",
         "network",
         "overview",
         "poster",
-        "seriesName",
+        "series_name",
         "slug",
         "status",
     }
@@ -387,4 +387,4 @@ def test_tvdb_search_series__success(tvdb_token):
 
 def test_tvdb_search_series__language(tvdb_token):
     results = tvdb_search_series(tvdb_token, "Witcher", language=RUSSIAN_LANG)
-    assert any(result["seriesName"] for result in results["data"])
+    assert any(result["series_name"] for result in results["data"])

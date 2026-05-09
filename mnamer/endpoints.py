@@ -1,8 +1,15 @@
-"""Provides a low-level interface for metadata media APIs."""
+"""Provides a low-level interface for metadata media APIs.
+
+Endpoint functions raise exceptions on API errors, so the response TypedDicts in this module
+describe the success-case shape only. Keys are snake_case. Responses are routed through
+`normalize_keys` to translate API camelCase/PascalCase before cast. Fields documented as
+always-present per the API contract are required; partial/optional fields use `NotRequired`.
+"""
 
 import datetime
 from re import match
 from time import sleep
+from typing import Any, NotRequired, TypedDict, cast
 
 from mnamer.exceptions import (
     MnamerException,
@@ -10,10 +17,109 @@ from mnamer.exceptions import (
     MnamerNotFoundException,
 )
 from mnamer.language import Language
-from mnamer.utils import clean_dict, parse_date, request_json
+from mnamer.utils import clean_dict, normalize_keys, parse_date, request_json
 
 OMDB_PLOT_TYPES = {"short", "long"}
 MAX_RETRIES = 5
+
+
+class OmdbSearchEntry(TypedDict):
+    imdb_id: str
+    year: str
+    title: NotRequired[str]
+
+
+class OmdbTitleResponse(TypedDict):
+    title: str
+    year: str
+    released: NotRequired[str]
+    plot: NotRequired[str]
+    imdb_id: str
+    error: NotRequired[str]
+
+
+class OmdbSearchResponse(TypedDict):
+    search: list[OmdbSearchEntry]
+    total_results: NotRequired[str]
+    error: NotRequired[str]
+
+
+class TmdbSearchEntry(TypedDict):
+    id: int
+    title: str
+    release_date: NotRequired[str]
+    overview: NotRequired[str]
+
+
+class TmdbMovieResponse(TypedDict):
+    id: int
+    title: str
+    release_date: NotRequired[str]
+    overview: NotRequired[str]
+    imdb_id: NotRequired[str]
+
+
+class TmdbSearchResponse(TypedDict):
+    results: list[TmdbSearchEntry]
+    total_pages: int
+    total_results: int
+
+
+class TvdbLinks(TypedDict):
+    last: int
+
+
+class TvdbSeriesData(TypedDict):
+    id: int
+    series_name: str
+
+
+class TvdbSeriesResponse(TypedDict):
+    data: TvdbSeriesData
+
+
+class TvdbEpisodeEntry(TypedDict):
+    first_aired: str
+    aired_episode_number: int
+    aired_season: int
+    overview: str | None
+    episode_name: str
+
+
+class TvdbEpisodesResponse(TypedDict):
+    data: list[TvdbEpisodeEntry]
+    links: TvdbLinks
+
+
+class TvdbSearchEntry(TypedDict):
+    id: int
+
+
+class TvdbSearchResponse(TypedDict):
+    data: list[TvdbSearchEntry]
+
+
+class TvMazeExternals(TypedDict):
+    thetvdb: int | str | None
+    imdb: NotRequired[str | None]
+
+
+class TvMazeShow(TypedDict):
+    id: int
+    name: str
+    externals: TvMazeExternals
+
+
+class TvMazeSearchEntry(TypedDict):
+    show: TvMazeShow
+
+
+class TvMazeEpisode(TypedDict):
+    airdate: str | None
+    number: int | None
+    season: int
+    name: str | None
+    summary: str | None
 
 
 def omdb_title(
@@ -26,7 +132,7 @@ def omdb_title(
     year: int | None = None,
     plot: str | None = None,
     cache: bool = True,
-) -> dict:
+) -> OmdbTitleResponse:
     """
     Looks up media by id using the Open Movie Database.
 
@@ -37,7 +143,7 @@ def omdb_title(
     elif plot and plot not in OMDB_PLOT_TYPES:
         raise MnamerException(f"plot must be one of {','.join(OMDB_PLOT_TYPES)}")
     url = "http://www.omdbapi.com"
-    parameters = {
+    parameters: dict[str, Any] = {
         "apikey": api_key,
         "i": id_imdb,
         "t": title,
@@ -47,18 +153,18 @@ def omdb_title(
         "type": media,
         "plot": plot,
     }
-    parameters = clean_dict(parameters)
-    status, content = request_json(url, parameters, cache=cache)
-    error = content.get("Error") if isinstance(content, dict) else None
+    status, content = request_json(url, clean_dict(parameters), cache=cache)
+    content = normalize_keys(content)
+    error = content.get("error")
     if status == 401:
         if error == "Request limit reached!":
             raise MnamerException("API request limit reached")
         raise MnamerException("invalid API key")
-    elif status != 200 or not isinstance(content, dict):  # pragma: no cover
+    elif status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException("OMDb down or unavailable?")
     elif error:
         raise MnamerNotFoundException(error)
-    return content
+    return cast(OmdbTitleResponse, content)
 
 
 def omdb_search(
@@ -68,7 +174,7 @@ def omdb_search(
     media: str | None = None,
     page: int = 1,
     cache: bool = True,
-) -> dict:
+) -> OmdbSearchResponse:
     """
     Search for media using the Open Movie Database.
 
@@ -77,22 +183,22 @@ def omdb_search(
     if page < 1 or page > 100:
         raise MnamerException("page must be between 1 and 100")
     url = "http://www.omdbapi.com"
-    parameters = {
+    parameters: dict[str, Any] = {
         "apikey": api_key,
         "s": query,
         "y": year,
         "type": media,
         "page": page,
     }
-    parameters = clean_dict(parameters)
-    status, content = request_json(url, parameters, cache=cache)
+    status, content = request_json(url, clean_dict(parameters), cache=cache)
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid API key")
-    elif content and not content.get("totalResults"):
+    elif content and not content.get("total_results"):
         raise MnamerNotFoundException()
     elif not content or status != 200:  # pragma: no cover
         raise MnamerNetworkException("OMDb down or unavailable?")
-    return content
+    return cast(OmdbSearchResponse, content)
 
 
 def tmdb_find(
@@ -101,7 +207,7 @@ def tmdb_find(
     external_id: str,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> dict[str, Any]:
     """
     Search for The Movie Database objects using another DB's foreign key.
 
@@ -117,7 +223,7 @@ def tmdb_find(
     if external_source == "imdb_id" and not match(r"tt\d+", external_id):
         raise MnamerException("invalid imdb tt-const value")
     url = "https://api.themoviedb.org/3/find/" + external_id or ""
-    parameters = {
+    parameters: dict[str, Any] = {
         "api_key": api_key,
         "external_source": external_source,
         "language": language,
@@ -130,11 +236,12 @@ def tmdb_find(
         "tv_season_results",
     ]
     status, content = request_json(url, parameters, cache=cache)
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid API key")
     elif status != 200 or not any(content.keys()):  # pragma: no cover
         raise MnamerNetworkException("TMDb down or unavailable?")
-    elif status == 404 or not any(content.get(k, {}) for k in keys):
+    elif not any(content.get(k, {}) for k in keys):
         raise MnamerNotFoundException
     return content
 
@@ -144,22 +251,23 @@ def tmdb_movies(
     id_tmdb: str,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> TmdbMovieResponse:
     """
     Lookup a movie item using The Movie Database.
 
     Online docs: developers.themoviedb.org/3/movies.
     """
     url = f"https://api.themoviedb.org/3/movie/{id_tmdb}"
-    parameters = {"api_key": api_key, "language": language}
+    parameters: dict[str, Any] = {"api_key": api_key, "language": language}
     status, content = request_json(url, parameters, cache=cache)
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid API key")
     elif status == 404:
         raise MnamerNotFoundException
     elif status != 200 or not any(content.keys()):  # pragma: no cover
         raise MnamerNetworkException("TMDb down or unavailable?")
-    return content
+    return cast(TmdbMovieResponse, content)
 
 
 def tmdb_search_movies(
@@ -171,14 +279,14 @@ def tmdb_search_movies(
     adult: bool = False,
     page: int = 1,
     cache: bool = True,
-) -> dict:
+) -> TmdbSearchResponse:
     """
     Search for movies using The Movie Database.
 
     Online docs: developers.themoviedb.org/3/search/search-movies.
     """
     url = "https://api.themoviedb.org/3/search/movie"
-    parameters = {
+    parameters: dict[str, Any] = {
         "api_key": api_key,
         "query": title,
         "page": page,
@@ -188,16 +296,17 @@ def tmdb_search_movies(
         "year": year,
     }
     status, content = request_json(url, parameters, cache=cache)
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid API key")
     elif status != 200 or not any(content.keys()):  # pragma: no cover
         raise MnamerNetworkException("TMDb down or unavailable?")
-    elif status == 404 or status == 422 or not content.get("total_results"):
+    elif not content.get("total_results"):
         raise MnamerNotFoundException
-    return content
+    return cast(TmdbSearchResponse, content)
 
 
-def tvdb_login(api_key: str | None) -> str:
+def tvdb_login(api_key: str) -> str:
     """
     Logs into TVDb using the provided api key.
 
@@ -235,7 +344,7 @@ def tvdb_episodes_id(
     id_tvdb: str,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> dict[str, Any]:
     """
     Returns the full information for a given episode id.
 
@@ -249,6 +358,7 @@ def tvdb_episodes_id(
     status, content = request_json(
         url, headers=headers, cache=cache is True and language is None
     )
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid token")
     elif status == 404 or not content.get("data"):
@@ -265,7 +375,7 @@ def tvdb_series_id(
     id_tvdb: str,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> TvdbSeriesResponse:
     """
     Returns a series records that contains all information known about a
     particular series id.
@@ -280,6 +390,7 @@ def tvdb_series_id(
     status, content = request_json(
         url, headers=headers, cache=cache is True and language is None
     )
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid token")
     elif status == 404 or not content.get("data"):
@@ -288,7 +399,7 @@ def tvdb_series_id(
         raise MnamerNetworkException("TVDb down or unavailable?")
     elif content["data"]["id"] == 0:
         raise MnamerNotFoundException
-    return content
+    return cast(TvdbSeriesResponse, content)
 
 
 def tvdb_series_id_episodes(
@@ -297,7 +408,7 @@ def tvdb_series_id_episodes(
     page: int = 1,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> TvdbEpisodesResponse:
     """
     All episodes for a given series.
 
@@ -309,17 +420,18 @@ def tvdb_series_id_episodes(
     headers = {"Authorization": f"Bearer {token}"}
     if language:
         headers["Accept-Language"] = language.a2
-    parameters = {"page": page}
+    parameters: dict[str, Any] = {"page": page}
     status, content = request_json(
         url, parameters, headers=headers, cache=cache is True and language is None
     )
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid token")
     elif status == 404 or not content.get("data"):
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException("TVDb down or unavailable?")
-    return content
+    return cast(TvdbEpisodesResponse, content)
 
 
 def tvdb_series_id_episodes_query(
@@ -330,7 +442,7 @@ def tvdb_series_id_episodes_query(
     page: int = 1,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> TvdbEpisodesResponse:
     """
     Allows the user to query against episodes for the given series.
 
@@ -343,20 +455,25 @@ def tvdb_series_id_episodes_query(
     headers = {"Authorization": f"Bearer {token}"}
     if language:
         headers["Accept-Language"] = language.a2
-    parameters = {"airedSeason": season, "airedEpisode": episode, "page": page}
+    parameters: dict[str, Any] = {
+        "airedSeason": season,
+        "airedEpisode": episode,
+        "page": page,
+    }
     status, content = request_json(
         url,
         parameters,
         headers=headers,
         cache=cache is True and language is None,
     )
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid token")
     elif status == 404 or not content.get("data"):
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException("TVDb down or unavailable?")
-    return content
+    return cast(TvdbEpisodesResponse, content)
 
 
 def tvdb_search_series(
@@ -366,7 +483,7 @@ def tvdb_search_series(
     id_zap2it: str | None = None,
     language: Language | None = None,
     cache: bool = True,
-) -> dict:
+) -> TvdbSearchResponse:
     """
     Allows the user to search for a series based on the following parameters.
 
@@ -375,13 +492,18 @@ def tvdb_search_series(
     """
     Language.ensure_valid_for_tvdb(language)
     url = "https://api.thetvdb.com/search/series"
-    parameters = {"name": series, "imdbId": id_imdb, "zap2itId": id_zap2it}
+    parameters: dict[str, Any] = {
+        "name": series,
+        "imdbId": id_imdb,
+        "zap2itId": id_zap2it,
+    }
     headers = {"Authorization": f"Bearer {token}"}
     if language:
         headers["Accept-Language"] = language.a2
     status, content = request_json(
         url, parameters, headers=headers, cache=cache is True and language is None
     )
+    content = normalize_keys(content)
     if status == 401:
         raise MnamerException("invalid token")
     elif status == 405:
@@ -392,7 +514,7 @@ def tvdb_search_series(
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException("TVDb down or unavailable?")
-    return content
+    return cast(TvdbSearchResponse, content)
 
 
 def tvmaze_show(
@@ -400,14 +522,14 @@ def tvmaze_show(
     embed_episodes: bool = False,
     cache: bool = False,
     attempt: int = 1,
-):
+) -> TvMazeShow:
     """
     Retrieve all primary information for a given show.
 
     Online docs: https://www.tvmaze.com/api#show-main-information
     """
     url = f"http://api.tvmaze.com/shows/{id_tvmaze}"
-    parameters = {}
+    parameters: dict[str, Any] = {}
     if embed_episodes:
         parameters["embed"] = "episodes"
     status, content = request_json(url, parameters, cache=cache)
@@ -418,10 +540,12 @@ def tvmaze_show(
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(TvMazeShow, normalize_keys(content))
 
 
-def tvmaze_show_search(query: str, cache: bool = True, attempt: int = 1) -> dict:
+def tvmaze_show_search(
+    query: str, cache: bool = True, attempt: int = 1
+) -> list[TvMazeSearchEntry]:
     """
     Search through all the shows in the database by the show's name. A fuzzy
     algorithm is used (with a fuzziness value of 2), meaning that shows will be
@@ -431,7 +555,7 @@ def tvmaze_show_search(query: str, cache: bool = True, attempt: int = 1) -> dict
     Online docs: https://www.tvmaze.com/api#show-search
     """
     url = "http://api.tvmaze.com/search/shows"
-    parameters = {"q": query}
+    parameters: dict[str, Any] = {"q": query}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -440,10 +564,12 @@ def tvmaze_show_search(query: str, cache: bool = True, attempt: int = 1) -> dict
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(list[TvMazeSearchEntry], normalize_keys(content))
 
 
-def tvmaze_show_single_search(query: str, cache: bool = True, attempt: int = 1) -> dict:
+def tvmaze_show_single_search(
+    query: str, cache: bool = True, attempt: int = 1
+) -> TvMazeShow:
     """
     Singlesearch endpoint either returns exactly one result, or no result at
     all. This endpoint is also forgiving of typos, but less so than the regular
@@ -453,7 +579,7 @@ def tvmaze_show_single_search(query: str, cache: bool = True, attempt: int = 1) 
     Online docs: https://www.tvmaze.com/api#show-single-search
     """
     url = "http://api.tvmaze.com/singlesearch/shows"
-    parameters = {"q": query}
+    parameters: dict[str, Any] = {"q": query}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -462,7 +588,7 @@ def tvmaze_show_single_search(query: str, cache: bool = True, attempt: int = 1) 
         raise MnamerNotFoundException
     elif status != 200:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(TvMazeShow, normalize_keys(content))
 
 
 def tvmaze_show_lookup(
@@ -470,7 +596,7 @@ def tvmaze_show_lookup(
     id_tvdb: str | None = None,
     cache: bool = True,
     attempt: int = 1,
-) -> dict:
+) -> TvMazeShow:
     """
     If you already know a show's tvrage, thetvdb or IMDB ID, you can use this
     endpoint to find this exact show on TVmaze.
@@ -480,7 +606,7 @@ def tvmaze_show_lookup(
     if not [id_imdb, id_tvdb].count(None) == 1:
         raise MnamerException("id_imdb and id_tvdb are mutually exclusive")
     url = "http://api.tvmaze.com/lookup/shows"
-    parameters = {"imdb": id_imdb, "thetvdb": id_tvdb}
+    parameters: dict[str, Any] = {"imdb": id_imdb, "thetvdb": id_tvdb}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -489,7 +615,7 @@ def tvmaze_show_lookup(
         raise MnamerNotFoundException
     elif status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(TvMazeShow, normalize_keys(content))
 
 
 def tvmaze_show_episodes_list(
@@ -497,7 +623,7 @@ def tvmaze_show_episodes_list(
     include_specials: bool = False,
     cache: bool = True,
     attempt: int = 1,
-) -> dict:
+) -> list[TvMazeEpisode]:
     """
     A complete list of episodes for the given show. Episodes are returned in
     their airing order, and include full episode information. By default,
@@ -506,7 +632,7 @@ def tvmaze_show_episodes_list(
     Online docs: https://www.tvmaze.com/api#show-episode-list
     """
     url = f"http://api.tvmaze.com/shows/{id_tvmaze}/episodes"
-    parameters = {"specials": int(include_specials)}
+    parameters: dict[str, Any] = {"specials": int(include_specials)}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -517,7 +643,7 @@ def tvmaze_show_episodes_list(
         raise MnamerNotFoundException
     elif status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(list[TvMazeEpisode], normalize_keys(content))
 
 
 def tvmaze_episodes_by_date(
@@ -525,7 +651,7 @@ def tvmaze_episodes_by_date(
     air_date: datetime.date | str,
     cache: bool = True,
     attempt: int = 1,
-) -> dict:
+) -> list[TvMazeEpisode]:
     """
     Retrieves all episodes from this show that have aired on a specific date.
     Useful for daily shows that don't adhere to a common season numbering.
@@ -533,7 +659,7 @@ def tvmaze_episodes_by_date(
     Online docs: https://www.tvmaze.com/api#episodes-by-date
     """
     url = f"http://api.tvmaze.com/shows/{id_tvmaze}/episodesbydate"
-    parameters = {"date": parse_date(air_date)}
+    parameters: dict[str, Any] = {"date": parse_date(air_date)}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -542,7 +668,7 @@ def tvmaze_episodes_by_date(
         raise MnamerNotFoundException
     elif status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(list[TvMazeEpisode], normalize_keys(content))
 
 
 def tvmaze_episode_by_number(
@@ -551,7 +677,7 @@ def tvmaze_episode_by_number(
     episode: int | None,
     cache: bool = True,
     attempt: int = 1,
-) -> dict:
+) -> TvMazeEpisode:
     """
     Retrieve one specific episode from this show given its season number and
     episode number.
@@ -559,7 +685,7 @@ def tvmaze_episode_by_number(
     Online docs: https://www.tvmaze.com/api#episode-by-number
     """
     url = f"http://api.tvmaze.com/shows/{id_tvmaze}/episodebynumber"
-    parameters = {"season": season, "number": episode}
+    parameters: dict[str, Any] = {"season": season, "number": episode}
     status, content = request_json(url, parameters, cache=cache)
     if status == 443 and attempt <= MAX_RETRIES:  # pragma: no cover
         sleep(attempt * 2)
@@ -568,4 +694,4 @@ def tvmaze_episode_by_number(
         raise MnamerNotFoundException
     elif status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException
-    return content
+    return cast(TvMazeEpisode, normalize_keys(content))

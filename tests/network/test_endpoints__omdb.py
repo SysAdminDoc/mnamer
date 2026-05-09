@@ -46,70 +46,70 @@ def test_omdb_title__title_id_xnor__neither(mock_request):
 
 def test_omdb_title__media__movie():
     expected_top_level_keys = {
-        "Actors",
-        "Awards",
-        "BoxOffice",
-        "Country",
-        "Director",
-        "DVD",
-        "Genre",
-        "imdbID",
-        "imdbRating",
-        "imdbVotes",
-        "Language",
-        "Metascore",
-        "Plot",
-        "Poster",
-        "Production",
-        "Rated",
-        "Ratings",
-        "Released",
-        "Response",
-        "Runtime",
-        "Title",
-        "Type",
-        "Website",
-        "Writer",
-        "Year",
+        "actors",
+        "awards",
+        "box_office",
+        "country",
+        "director",
+        "dvd",
+        "genre",
+        "imdb_id",
+        "imdb_rating",
+        "imdb_votes",
+        "language",
+        "metascore",
+        "plot",
+        "poster",
+        "production",
+        "rated",
+        "ratings",
+        "released",
+        "response",
+        "runtime",
+        "title",
+        "type",
+        "website",
+        "writer",
+        "year",
     }
     result = omdb_title(Omdb.api_key, media="movie", title="ninja turtles")
     assert_has_keys(result, expected_top_level_keys)
-    assert result["Response"]
-    assert result["Type"] == "movie"
-    assert result["Title"] == "Teenage Mutant Ninja Turtles"
+    assert result["response"]
+    assert result["type"] == "movie"
+    assert result["title"] == "Teenage Mutant Ninja Turtles"
 
 
 def test_omdb_title__media__series():
     expected_top_level_keys = {
-        "Actors",
-        "Awards",
-        "Country",
-        "Director",
-        "Genre",
-        "imdbID",
-        "imdbRating",
-        "imdbVotes",
-        "Language",
-        "Metascore",
-        "Plot",
-        "Poster",
-        "Rated",
-        "Ratings",
-        "Released",
-        "Response",
-        "Runtime",
-        "Title",
-        "totalSeasons",
-        "Type",
-        "Writer",
-        "Year",
+        "actors",
+        "awards",
+        "country",
+        "director",
+        "genre",
+        "imdb_id",
+        "imdb_rating",
+        "imdb_votes",
+        "language",
+        "metascore",
+        "plot",
+        "poster",
+        "rated",
+        "ratings",
+        "released",
+        "response",
+        "runtime",
+        "title",
+        "total_seasons",
+        "type",
+        "writer",
+        "year",
     }
 
     result = omdb_title(Omdb.api_key, media="series", title="ninja turtles")
     assert_has_keys(result, expected_top_level_keys)
-    assert result["Response"]
-    assert result["Type"] == "series"
-    assert result["Title"] == "Teenage Mutant Ninja Turtles"
+    assert result["response"]
+    assert result["type"] == "series"
+    assert result["title"] == "Teenage Mutant Ninja Turtles"
 
 
 def test_omdb_title__api_key_fail():
@@ -133,25 +133,25 @@ def test_omdb_title__invalid_plot():
 
 
 def test_omdb_search__fields__top_level():
-    expected_fields = {"Search", "Response", "totalResults"}
+    expected_fields = {"search", "response", "total_results"}
     result = omdb_search(Omdb.api_key, "ninja turtles")
     assert_has_keys(result, expected_fields)
 
 
 def test_omdb_search__fields__search():
-    expected_fields = {"Title", "Year", "imdbID", "Type", "Poster"}
-    result = omdb_search(Omdb.api_key, "ninja turtles")["Search"][0]
+    expected_fields = {"title", "year", "imdb_id", "type", "poster"}
+    result = omdb_search(Omdb.api_key, "ninja turtles")["search"][0]
     assert_has_keys(result, expected_fields)
 
 
 def test_omdb_search__query__movie():
     result = omdb_search(Omdb.api_key, "ninja turtles", media="movie")
-    assert all(entry["Type"] == "movie" for entry in result["Search"])
+    assert all(entry["type"] == "movie" for entry in result["search"])
 
 
 def test_omdb_search__query__series():
     result = omdb_search(Omdb.api_key, "ninja turtles", media="series")
-    assert all(entry["Type"] == "series" for entry in result["Search"])
+    assert all(entry["type"] == "series" for entry in result["search"])
 
 
 def test_omdb_search__api_key_fail():
@@ -166,7 +166,7 @@ def test_omdb_search__query__fail():
 
 def test_omdb_search__year():
     result = omdb_search(Omdb.api_key, "ninja turtles", year=1987)
-    assert "tt0131613" == result["Search"][0]["imdbID"]
+    assert "tt0131613" == result["search"][0]["imdb_id"]
 
 
 def test_omdb_search__page_diff():

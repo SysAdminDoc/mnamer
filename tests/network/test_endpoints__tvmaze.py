@@ -21,7 +21,7 @@ pytestmark = [
 META = EPISODE_META["The Walking Dead"]
 EXPECTED_SHOW_KEYS = [
     "_links",
-    "dvdCountry",
+    "dvd_country",
     "externals",
     "genres",
     "id",
@@ -29,7 +29,7 @@ EXPECTED_SHOW_KEYS = [
     "language",
     "name",
     "network",
-    "officialSite",
+    "official_site",
     "premiered",
     "rating",
     "runtime",
@@ -39,7 +39,7 @@ EXPECTED_SHOW_KEYS = [
     "type",
     "updated",
     "url",
-    "webChannel",
+    "web_channel",
     "weight",
 ]
 
@@ -80,7 +80,7 @@ def test_tvmaze_show__embed_episodes():
         "language",
         "name",
         "network",
-        "officialSite",
+        "official_site",
         "premiered",
         "rating",
         "runtime",
@@ -90,7 +90,7 @@ def test_tvmaze_show__embed_episodes():
         "type",
         "updated",
         "url",
-        "webChannel",
+        "web_channel",
         "weight",
     ]
     result = tvmaze_show(id_tvmaze=META["id_tvmaze"], embed_episodes=True)
