@@ -1,103 +1,68 @@
 """Shared constant definitions."""
 
 import datetime as dt
+from importlib.metadata import PackageNotFoundError, version as pkg_version
 from pathlib import Path
 from platform import platform, python_version
 from sys import argv, gettrace, version_info
 
+VERSION: str
 
-def _resolve_version() -> str:
-    try:
-        from mnamer.__version__ import __version__
+try:
+    from mnamer.__version__ import (
+        __version__ as VERSION,  # type: ignore  # pyright: ignore
+    )
+except ModuleNotFoundError:
+    from setuptools_scm import get_version  # type: ignore
 
-        return __version__
-    except ModuleNotFoundError:
-        from setuptools_scm import get_version  # type: ignore[import-untyped]
+    VERSION = get_version(root="..", relative_to=__file__, local_scheme="dirty-tag")  # pyright: ignore
+try:
+    appdirs_version = pkg_version("appdirs")
+except PackageNotFoundError:
+    appdirs_version = "N/A"
 
-        return get_version(root="..", relative_to=__file__, local_scheme="dirty-tag")
+try:
+    from appdirs import user_cache_dir
 
+    cache_dir = user_cache_dir()
+except ModuleNotFoundError:
+    cache_dir = "N/A"
 
-def _resolve_appdirs_version() -> str:
-    try:
-        from appdirs import __version__  # type: ignore[import-untyped]
+try:
+    guessit_version = pkg_version("guessit")
+except PackageNotFoundError:
+    guessit_version = "N/A"
 
-        return __version__
-    except ModuleNotFoundError:
-        return "N/A"
+try:
+    requests_version = pkg_version("requests")
+except PackageNotFoundError:
+    requests_version = "N/A"
 
+try:
+    requests_cache_version = pkg_version("requests_cache")
+except PackageNotFoundError:
+    requests_cache_version = "N/A"
 
-def _resolve_cache_dir() -> str:
-    try:
-        from appdirs import user_cache_dir  # type: ignore[import-untyped]
-
-        return user_cache_dir()
-    except ModuleNotFoundError:
-        return "N/A"
-
-
-def _resolve_guessit_version() -> str:
-    try:
-        from guessit import __version__  # type: ignore[import-untyped]
-
-        return __version__
-    except ModuleNotFoundError:
-        return "N/A"
-
-
-def _resolve_requests_version() -> str:
-    try:
-        from requests import __version__
-
-        return __version__
-    except ModuleNotFoundError:
-        return "N/A"
-
-
-def _resolve_requests_cache_version() -> str:
-    try:
-        from requests_cache import __version__
-
-        return __version__
-    except ModuleNotFoundError:
-        return "N/A"
-
-
-def _resolve_teletype_version() -> str:
-    try:
-        from teletype import VERSION
-
-        return VERSION
-    except ModuleNotFoundError:
-        return "N/A"
-
-
-VERSION: str = _resolve_version()
-appdirs_version: str = _resolve_appdirs_version()
-cache_dir: str = _resolve_cache_dir()
-guessit_version: str = _resolve_guessit_version()
-requests_version: str = _resolve_requests_version()
-requests_cache_version: str = _resolve_requests_cache_version()
-teletype_version: str = _resolve_teletype_version()
+try:
+    teletype_version = pkg_version("teletype")
+except PackageNotFoundError:
+    teletype_version = "N/A"
 
 
 CACHE_PATH = Path(
-    cache_dir, f"mnamer-py{version_info.major}.{version_info.minor}"
+    cache_dir, f"mnamer-py{version_info.major}.{version_info.minor}.sqlite"
 ).absolute()
 
 CURRENT_YEAR = dt.datetime.now().year
-
 DEPRECATED = {"no_replace", "replacements"}
-
 IS_DEBUG = gettrace() is not None
-
 SUBTITLE_CONTAINERS = [".srt", ".idx", ".sub"]
-
 
 SYSTEM = {
     "date": dt.date.today(),
     "platform": platform(),
     "arguments": argv[1:],
-    "cache location": f"{CACHE_PATH}.sqlite",
+    "cache location": CACHE_PATH,
     "python version": python_version(),
     "mnamer version": VERSION,
     "appdirs version": appdirs_version,

@@ -80,6 +80,7 @@ venv = "venv"
 reportAny = false
 reportExplicitAny = false
 reportGeneralTypeIssues = "information"
+reportIgnoreCommentWithoutRule = false
 reportMissingTypeStubs = false
 
 [tool.ruff.lint.isort]
