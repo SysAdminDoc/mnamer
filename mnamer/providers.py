@@ -37,10 +37,10 @@ from mnamer.utils import parse_date, year_range_parse
 class Provider[M: Metadata](ABC):
     """ABC for Providers, high-level interfaces for metadata media providers."""
 
-    api_key: str | None = None
+    api_key: str
     cache: bool = True
 
-    def __init__(self, api_key: str | None = None, cache: bool = True):
+    def __init__(self, api_key: str = "", cache: bool = True):
         """Initializes the provider."""
         if api_key:
             self.api_key = api_key
@@ -79,28 +79,33 @@ class Provider[M: Metadata](ABC):
     def provider_factory(
         provider: Literal[ProviderType.TVMAZE], settings: SettingStore
     ) -> TvMaze: ...
+    @overload
+    @staticmethod
+    def provider_factory(
+        provider: ProviderType, settings: SettingStore
+    ) -> Omdb | Tmdb | Tvdb | TvMaze: ...
     @staticmethod
     def provider_factory(
         provider: ProviderType, settings: SettingStore
     ) -> Omdb | Tmdb | Tvdb | TvMaze:
         """Factory function for DB Provider concrete classes."""
-        provider_cls: type[Omdb] | type[Tmdb] | type[Tvdb] | type[TvMaze] = {
+        provider_classes: dict[
+            ProviderType, type[Omdb] | type[Tmdb] | type[Tvdb] | type[TvMaze]
+        ] = {
             ProviderType.TMDB: Tmdb,
             ProviderType.TVDB: Tvdb,
             ProviderType.TVMAZE: TvMaze,
             ProviderType.OMDB: Omdb,
-        }[provider]
-        return provider_cls.from_settings(settings)
+        }
+        return provider_classes[provider].from_settings(settings)
 
 
 class Omdb(Provider[MetadataMovie]):
     """Queries the OMDb API."""
 
-    # str | None (not str) for Liskov compatibility with the Provider base; runtime
-    # value is always str because environ.get supplies the default.
-    api_key: str | None = environ.get("API_KEY_OMDB", "477a7ebc")
+    api_key: str = environ.get("API_KEY_OMDB", "477a7ebc")
 
-    def __init__(self, api_key: str | None = None, cache: bool = True):
+    def __init__(self, api_key: str = "", cache: bool = True):
         super().__init__(api_key, cache)
         assert self.api_key
 
@@ -171,11 +176,9 @@ class Omdb(Provider[MetadataMovie]):
 class Tmdb(Provider[MetadataMovie]):
     """Queries the TMDb API."""
 
-    api_key: str | None = environ.get(
-        "API_KEY_TMDB", "db972a607f2760bb19ff8bb34074b4c7"
-    )
+    api_key: str = environ.get("API_KEY_TMDB", "db972a607f2760bb19ff8bb34074b4c7")
 
-    def __init__(self, api_key: str | None = None, cache: bool = True):
+    def __init__(self, api_key: str = "", cache: bool = True):
         super().__init__(api_key, cache)
         assert self.api_key
 
@@ -248,10 +251,10 @@ class Tmdb(Provider[MetadataMovie]):
 class Tvdb(Provider[MetadataEpisode]):
     """Queries the TVDb API."""
 
-    api_key: str | None = environ.get("API_KEY_TVDB", "E69C7A2CEF2F3152")
+    api_key: str = environ.get("API_KEY_TVDB", "E69C7A2CEF2F3152")
     token: str
 
-    def __init__(self, api_key: str | None = None, cache: bool = True):
+    def __init__(self, api_key: str = "", cache: bool = True):
         super().__init__(api_key, cache)
         assert self.api_key
         self.token = "" if self.cache else self._login()
@@ -385,9 +388,7 @@ class Tvdb(Provider[MetadataEpisode]):
 class TvMaze(Provider[MetadataEpisode]):
     """Queries the TVMaze API."""
 
-    api_key: str | None = environ.get(
-        "API_KEY_TVMAZE", "wxadpr5W7yWma_QYaHM4BB_l80WIIjcK"
-    )
+    api_key: str = environ.get("API_KEY_TVMAZE", "wxadpr5W7yWma_QYaHM4BB_l80WIIjcK")
 
     @override
     def search(self, query: MetadataEpisode) -> Iterator[MetadataEpisode]:
