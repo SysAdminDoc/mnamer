@@ -2,7 +2,7 @@ import dataclasses
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from mnamer.argument import ArgLoader
 from mnamer.const import SUBTITLE_CONTAINERS
@@ -368,8 +368,9 @@ class SettingStore:
     def _resolve_path(path: str | Path) -> Path:
         return Path(path).resolve()
 
+    @override
     def __setattr__(self, key: str, value: Any):
-        converter_map: dict[str, Callable] = {
+        converter_map: dict[str, Callable[[Any], Any]] = {
             "episode_api": ProviderType,
             "episode_directory": self._resolve_path,
             "language": Language.parse,
@@ -379,7 +380,7 @@ class SettingStore:
             "movie_directory": self._resolve_path,
             "targets": lambda targets: [Path(target) for target in targets],
         }
-        converter: Callable | None = converter_map.get(key)
+        converter: Callable[[Any], Any] | None = converter_map.get(key)
         if value is not None and converter:
             value = converter(value)
         super().__setattr__(key, value)
@@ -442,9 +443,7 @@ class SettingStore:
 
     def api_key_for(self, provider_type: ProviderType) -> str | None:
         """Returns the API key for a provider type."""
-        if provider_type:
-            return getattr(self, f"api_key_{provider_type.value}")
-        return None
+        return getattr(self, f"api_key_{provider_type.value}")
 
     def formatting_for(self, media: MediaType | Metadata) -> str:
         """Returns the formatting string for a given media type or metadata."""

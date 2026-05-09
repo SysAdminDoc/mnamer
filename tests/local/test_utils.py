@@ -499,7 +499,7 @@ def test_normalize_container__has_dot():
 def test_request_json__status(mock_request, code):
     mock_response = MockRequestResponse(code, "{}")
     mock_request.return_value = mock_response
-    status, _ = request_json("http://...", cache=False)
+    status, _content = request_json("http://...", cache=False)
     assert status == code
 
 

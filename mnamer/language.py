@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any
+from typing import Any, Self, override
 
 from mnamer.exceptions import MnamerException
 
@@ -41,7 +41,7 @@ class Language:
     a3: str
 
     @classmethod
-    def parse(cls, value: Any) -> Language | None:
+    def parse(cls, value: Any) -> Self | None:
         if not value:
             return None
         if isinstance(value, cls):
@@ -63,11 +63,12 @@ class Language:
         raise MnamerException("Could not determine language")
 
     @classmethod
-    def all(cls) -> tuple[Language, ...]:
+    def all(cls) -> tuple[Self, ...]:
         return tuple(
             cls(row[0].capitalize(), row[1], row[2]) for row in KNOWN_LANGUAGES
         )
 
+    @override
     def __str__(self) -> str:
         return self.a2
 

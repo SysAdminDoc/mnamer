@@ -24,8 +24,6 @@ class SettingSpec:
         """Converts ArgSpec instance into a Python dictionary."""
         return {k: v for k, v in vars(self).items() if k}
 
-    __call__ = as_dict
-
     @property
     def registration(self) -> tuple[list[str], dict[str, Any]]:
         names = self.flags or []

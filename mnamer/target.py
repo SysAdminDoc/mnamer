@@ -4,7 +4,7 @@ import datetime as dt
 from os import path
 from pathlib import Path
 from shutil import move
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self, override
 
 from guessit import guessit  # type: ignore
 
@@ -29,14 +29,12 @@ from mnamer.utils import (
 class Target:
     """Manages metadata state for a media file and facilitates its relocation."""
 
-    _providers: ClassVar[dict[ProviderType, Provider]] = {}
+    _providers: ClassVar[dict[ProviderType, Provider[Any]]] = {}
 
     _settings: SettingStore
-    _provider: Provider
+    _provider: Provider[Any]
     _has_moved: bool
     _has_renamed: bool
-    _raw_metadata: dict[str, str]
-    _parsed_metadata: Metadata
 
     source: Path
     metadata: Metadata
@@ -51,14 +49,12 @@ class Target:
         self._override_metadata_ids()
         self._register_provider()
 
+    @override
     def __str__(self) -> str:
-        if isinstance(self.source, Path):
-            return str(self.source.resolve())
-        else:
-            return str(self.source)
+        return str(self.source.resolve())
 
     @classmethod
-    def populate_paths(cls: type[Target], settings: SettingStore) -> list[Target]:
+    def populate_paths(cls, settings: SettingStore) -> list[Self]:
         """Creates a list of Target objects for media files found in paths."""
         file_paths = crawl_in(settings.targets, settings.recurse)
         file_paths = filter_blacklist(file_paths, settings.ignore)
@@ -245,6 +241,6 @@ class Target:
         destination_path = Path(self.destination).resolve()
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            move(str(self.source), destination_path)
+            _dest = move(str(self.source), destination_path)
         except OSError as e:  # pragma: no cover
             raise MnamerException from e
