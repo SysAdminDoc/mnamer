@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import override
 
 from mnamer import tty
-from mnamer.const import SYSTEM, USAGE, VERSION
+from mnamer.const import SYSTEM, USAGE, VERSION  # pyright: ignore
 from mnamer.exceptions import (
     MnamerAbortException,
     MnamerException,

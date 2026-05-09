@@ -10,14 +10,13 @@ scripts = { mnamer = "mnamer.__main__:main" }
 urls = { repository = "https://github.com/jkwill87/mnamer" }
 readme = "README.md"
 dependencies = [
-    "appdirs>=1.4.4",
-    "babelfish>=0.6.0",
-    "guessit>=3.8.0",
-    "requests>=2.32.0",
-    "requests-cache~=0.9.8",
-    "setuptools-scm>=8.0.0",
-    "teletype>=1.3.4",
-    "typing-extensions>=4.7.0",
+    "appdirs~=1.4.4",
+    "babelfish~=0.6.1",
+    "guessit~=3.8.0",
+    "requests~=2.33.1",
+    "requests-cache~=1.3.1",
+    "setuptools-scm>=10.0.0",
+    "teletype~=1.3.4",
 ]
 
 
@@ -33,17 +32,18 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
+    "appdirs-stubs~=0.2.0",
     "build>=1.2.0",
-    "codecov>=2.1.13",
-    "mypy>=1.17.0",
-    "pylint>=3.3.0",
-    "pytest>=8.4.1",
-    "pytest-cov>=6.2.1",
-    "pytest-rerunfailures>=15.1",
-    "ruff>=0.12.5",
+    "codecov~=2.1.13",
+    "mypy>=2.0",
+    "pylint>=4.0",
+    "pytest-cov>=7.0",
+    "pytest-rerunfailures>=16.0",
+    "pytest>=9.0",
+    "ruff~=0.15.12",
     "setuptools>=80.0.0",
     "twine>=6.0.0",
-    "types-requests>=2.32.0",
+    "types-requests~=2.33.0",
     "wheel>=0.45.0",
 ]
 
@@ -80,6 +80,7 @@ venv = "venv"
 reportAny = false
 reportExplicitAny = false
 reportGeneralTypeIssues = "information"
+reportIgnoreCommentWithoutRule = false
 reportMissingTypeStubs = false
 
 [tool.ruff.lint.isort]

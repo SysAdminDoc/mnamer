@@ -4,6 +4,7 @@ import datetime as dt
 import json
 import re
 from collections.abc import Callable, Iterable, Iterator
+from contextlib import nullcontext
 from os import walk
 from os.path import exists, expanduser, expandvars, getsize, splitdrive, splitext
 from pathlib import Path, PurePath
@@ -273,25 +274,22 @@ def request_json(
         "like Gecko) Chrome/79.0.3945.88 Safari/537.36"
     )
 
-    # requests-cache has no public API for per-request cache disable; access internal flag.
-    initial_cache_state = session._disabled  # pyright: ignore[reportPrivateUsage]
+    cache_ctx = session.cache_disabled() if not cache else nullcontext()
     try:
-        session._disabled = not cache  # pyright: ignore[reportPrivateUsage]
-        response = session.request(
-            url=url,
-            params=parameters,
-            json=body,
-            headers=headers,
-            method=method,
-            timeout=1,
-        )
+        with cache_ctx:
+            response = session.request(
+                url=url,
+                params=parameters,
+                json=body,
+                headers=headers,
+                method=method,
+                timeout=1,
+            )
         status = response.status_code
         content = response.json() if status // 100 == 2 else None
     except Exception:
         content = None
         status = 500
-    finally:
-        session._disabled = initial_cache_state  # pyright: ignore[reportPrivateUsage]
     return status, (content if content is not None else {})
 
 

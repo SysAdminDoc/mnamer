@@ -108,15 +108,17 @@ class SettingStore:
         ).as_dict(),
     )
     mask: list[str] = dataclasses.field(
-        default_factory=lambda: [
-            "avi",
-            "m4v",
-            "mp4",
-            "mkv",
-            "ts",
-            "wmv",
-        ]
-        + SUBTITLE_CONTAINERS,
+        default_factory=lambda: (
+            [
+                "avi",
+                "m4v",
+                "mp4",
+                "mkv",
+                "ts",
+                "wmv",
+            ]
+            + SUBTITLE_CONTAINERS
+        ),
         metadata=SettingSpec(
             flags=["--mask"],
             group=SettingType.PARAMETER,
