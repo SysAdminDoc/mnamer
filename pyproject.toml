@@ -73,11 +73,14 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-reportGeneralTypeIssues = "information"
 pythonVersion = "3.12"
 include = ["mnamer"]
-exclude = ["playground.py", "venv"]
+exclude = ["playground.py", ".venv", "venv", "build", "dist", "tests"]
 venv = "venv"
+reportAny = false
+reportExplicitAny = false
+reportGeneralTypeIssues = "information"
+reportMissingTypeStubs = false
 
 [tool.ruff.lint.isort]
 known-first-party = ["mnamer"]
