@@ -3,7 +3,7 @@
 import datetime as dt
 import json
 import re
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from os import walk
 from os.path import exists, expanduser, expandvars, getsize, splitdrive, splitext
 from pathlib import Path, PurePath
@@ -16,7 +16,9 @@ from requests.adapters import HTTPAdapter
 from mnamer.const import CACHE_PATH, CURRENT_YEAR, SUBTITLE_CONTAINERS
 
 
-def clean_dict(target_dict: dict, whitelist=None) -> dict:
+def clean_dict(
+    target_dict: dict[str, Any], whitelist: Iterable[str] | None = None
+) -> dict[str, str]:
     """Convenience function that removes a dicts keys that have falsy values."""
     return {
         str(k).strip(): str(v).strip()
@@ -94,7 +96,7 @@ def filter_containers(
     ]
 
 
-def findall(s, ss) -> Iterator[int]:
+def findall(s: str, ss: str) -> Iterator[int]:
     """Yields indexes of all start positions of substring matches in string."""
     i = s.find(ss)
     while i != -1:
@@ -102,15 +104,15 @@ def findall(s, ss) -> Iterator[int]:
         i = s.find(ss, i + 1)
 
 
-def fn_chain(*fn_list: Callable) -> Callable:
+def fn_chain(*fn_list: Callable[..., Any]) -> Callable[..., tuple[Any, ...]]:
     """Chains a list of function calls into one."""
     return lambda *args, **kwargs: tuple(fn(*args, **kwargs) for fn in fn_list)
 
 
-def fn_pipe(*fn_list: Callable) -> Callable:
-    """Pipes a list of function calls into one."""
+def fn_pipe[T](*fn_list: Callable[[T], T]) -> Callable[[T], T]:
+    """Pipes a list of function calls (each `T -> T`) into one."""
 
-    def resolver(x):
+    def resolver(x: T) -> T:
         for fn in fn_list:
             x = fn(x)
         return x
@@ -118,7 +120,7 @@ def fn_pipe(*fn_list: Callable) -> Callable:
     return resolver
 
 
-def format_dict(body: dict) -> str:
+def format_dict(body: dict[str, Any]) -> str:
     """
     Formats a dictionary into a multi-line bulleted string of key-value pairs.
     """
@@ -129,7 +131,7 @@ def format_exception(body: Exception) -> str:
     return str(body)
 
 
-def format_iter(body: list) -> str:
+def format_iter(body: list[Any]) -> str:
     """
     Formats an iterable into a multi-line bulleted string of its values.
     """
@@ -143,26 +145,22 @@ def is_subtitle(container: str | Path | None) -> bool:
     return str(container).endswith(tuple(SUBTITLE_CONTAINERS))
 
 
-def get_session() -> requests_cache.CachedSession:
-    """Convenience function that returns request-cache session singleton."""
+_session: requests_cache.CachedSession | None = None
 
-    def make_session():
-        session = requests_cache.CachedSession(
+
+def get_session() -> requests_cache.CachedSession:
+    """Returns a cached requests-cache session singleton."""
+    global _session
+    if _session is None:
+        _session = requests_cache.CachedSession(
             cache_name=str(CACHE_PATH),
             extension=".sqlite",
             expire_after=518_400,  # 6 days
         )
         adapter = HTTPAdapter(max_retries=3)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        return session
-
-    if hasattr(get_session, "session"):
-        session: requests_cache.CachedSession = get_session.session  # type: ignore[attr-defined]
-        return session
-    session = make_session()
-    get_session.session = session  # type: ignore[attr-defined]
-    return session
+        _session.mount("http://", adapter)
+        _session.mount("https://", adapter)
+    return _session
 
 
 def get_filesize(path: Path) -> str:
@@ -212,6 +210,28 @@ def normalize_containers(container_list: list[str]) -> list[str]:
     return [normalize_container(container) for container in container_list]
 
 
+_CAMEL_TO_SNAKE_PATTERN_1 = re.compile(r"(.)([A-Z][a-z]+)")
+_CAMEL_TO_SNAKE_PATTERN_2 = re.compile(r"([a-z0-9])([A-Z])")
+
+
+def to_snake_case(s: str) -> str:
+    """Converts a camelCase or PascalCase string to snake_case (e.g. imdbID -> imdb_id)."""
+    s = _CAMEL_TO_SNAKE_PATTERN_1.sub(r"\1_\2", s)
+    s = _CAMEL_TO_SNAKE_PATTERN_2.sub(r"\1_\2", s)
+    return s.lower()
+
+
+def normalize_keys(value: Any) -> Any:
+    """Recursively rewrites dict keys in a JSON-like value to snake_case."""
+    if isinstance(value, dict):
+        items: dict[Any, Any] = value
+        return {to_snake_case(str(k)): normalize_keys(v) for k, v in items.items()}
+    if isinstance(value, list):
+        items_list: list[Any] = value
+        return [normalize_keys(item) for item in items_list]
+    return value
+
+
 def parse_date(value: str | dt.date | dt.datetime) -> dt.date:
     """Converts an ambiguously formatted date type into a date object."""
     if isinstance(value, str):
@@ -224,14 +244,14 @@ def parse_date(value: str | dt.date | dt.datetime) -> dt.date:
 
 
 def request_json(
-    url,
-    parameters: dict | list | None = None,
-    body: dict | None = None,
-    headers: dict | None = None,
+    url: str,
+    parameters: dict[str, Any] | list[tuple[str, Any]] | None = None,
+    body: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
     cache: bool = True,
-) -> tuple[int, dict]:
+) -> tuple[int, Any]:
     """
-    Queries a url for json data.
+    Queries a url for json data; the response shape is API-specific (dict or list).
 
     Note: Requests are cached using requests_cached for a week, this is done
     transparently by using the package's monkey patching.
@@ -239,10 +259,7 @@ def request_json(
     assert url
     session = get_session()
 
-    if isinstance(headers, dict):
-        headers = clean_dict(headers)
-    else:
-        headers = {}
+    headers = clean_dict(headers) if headers else {}
     if isinstance(parameters, dict):
         parameters = [(k, v) for k, v in clean_dict(parameters).items()]
     if body:
@@ -256,9 +273,10 @@ def request_json(
         "like Gecko) Chrome/79.0.3945.88 Safari/537.36"
     )
 
-    initial_cache_state = session._disabled  # yes, i'm a bad person
+    # requests-cache has no public API for per-request cache disable; access internal flag.
+    initial_cache_state = session._disabled  # pyright: ignore[reportPrivateUsage]
     try:
-        session._disabled = not cache
+        session._disabled = not cache  # pyright: ignore[reportPrivateUsage]
         response = session.request(
             url=url,
             params=parameters,
@@ -273,8 +291,8 @@ def request_json(
         content = None
         status = 500
     finally:
-        session._disabled = initial_cache_state
-    return status, (content or {})
+        session._disabled = initial_cache_state  # pyright: ignore[reportPrivateUsage]
+    return status, (content if content is not None else {})
 
 
 def str_fix_padding(s: str) -> str:
@@ -325,7 +343,6 @@ def str_sanitize(filename: str) -> str:
 def str_scenify(filename: str) -> str:
     """Replaces non ascii-alphanumerics with dots."""
     filename = normalize("NFKD", filename)
-    filename.encode("ascii", "ignore")
     filename = re.sub(r"\s+", ".", filename)
     filename = re.sub(r"[^.\d\w/]", "", filename)
     filename = re.sub(r"\.+", ".", filename)
@@ -466,8 +483,8 @@ def str_title_case(s: str) -> str:
     for exception in uppercase_exceptions:
         for pos in findall(string_lower, exception):
             is_start = pos == 0
-            prev_char = None if is_start else string_lower[pos - 1]  # type: ignore
-            is_left_partitioned = is_start or prev_char in partition_chars  # type: ignore
+            prev_char = "" if is_start else string_lower[pos - 1]
+            is_left_partitioned = is_start or prev_char in partition_chars
             word_length = len(exception)
             ends = pos + word_length == string_length
             next_char = "" if ends else string_lower[pos + word_length]
@@ -492,9 +509,10 @@ def year_range_parse(years: str | int | None, tolerance: int = 1) -> tuple[int, 
     regex = r"^((?:19|20)\d{2})?([-,: ]*)?((?:19|20)\d{2})?$"
     default_start = 1900
     default_end = CURRENT_YEAR
-    try:
-        start, dash, end = re.match(regex, str(years).strip()).groups()  # type: ignore
-    except AttributeError:
+    match = re.match(regex, str(years).strip())
+    if match:
+        start, dash, end = match.groups()
+    else:
         start, end, dash = None, None, True
     if not start and not end:
         start, end, dash = None, None, True

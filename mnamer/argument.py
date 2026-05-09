@@ -1,5 +1,5 @@
 import argparse
-from typing import Any
+from typing import Any, final, override
 
 from mnamer.const import USAGE
 from mnamer.setting_spec import SettingSpec
@@ -28,6 +28,7 @@ DIRECTIVES:
 """
 
 
+@final
 class ArgLoader(argparse.ArgumentParser):
     """
     An overridden ArgumentParser class which is build to accommodate mnamer's setting
@@ -49,7 +50,9 @@ class ArgLoader(argparse.ArgumentParser):
             SettingType.PARAMETER,
             SettingType.POSITIONAL,
         }
-        [self._add_spec(spec) for spec in specs if spec.group in groups]
+        for spec in specs:
+            if spec.group in groups:
+                self._add_spec(spec)
 
     def _add_spec(self, spec: SettingSpec):
         if spec.group is SettingType.PARAMETER:
@@ -63,7 +66,7 @@ class ArgLoader(argparse.ArgumentParser):
         args, kwargs = spec.registration
         if not args or not kwargs.get("help"):
             raise RuntimeError("Cannot register ArgumentSpec")
-        group.add_argument(*args, **kwargs)
+        _action = group.add_argument(*args, **kwargs)
 
     __iadd__ = _add_spec
 
@@ -73,6 +76,7 @@ class ArgLoader(argparse.ArgumentParser):
             raise RuntimeError(f"invalid arguments: {','.join(unknowns)}")
         return vars(load_arguments)
 
+    @override
     def format_help(self) -> str:
         """
         Overrides ArgumentParser's format_help to dynamically generate a help message

@@ -46,20 +46,16 @@ def _abort_helpers() -> tuple[
     )
 
 
-def _msg_format(body: Any):
-    converter_map: dict[type, Callable] = {
+def _msg_format(body: Any) -> str:
+    converter_map: dict[type, Callable[[Any], str]] = {
         dict: format_dict,
         list: format_iter,
         tuple: format_iter,
         set: format_iter,
         MnamerException: format_exception,
     }
-    converter: Callable | None = converter_map.get(type(body), str)
-    if converter:
-        body = converter(body)
-    else:
-        body = getattr(body, "value", body)
-    return body
+    converter: Callable[[Any], str] = converter_map.get(type(body), str)
+    return converter(body)
 
 
 def configure(settings: SettingStore):

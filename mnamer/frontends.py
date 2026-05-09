@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import override
 
 from mnamer import tty
 from mnamer.const import SYSTEM, USAGE, VERSION
@@ -64,6 +65,8 @@ class Frontend(ABC):
 
 
 class Cli(Frontend):
+    success_count: int
+
     def __init__(self, settings: SettingStore):
         super().__init__(settings)
         if not settings.targets:
@@ -75,6 +78,7 @@ class Cli(Frontend):
     def total_count(self):
         return len(self.targets)
 
+    @override
     def launch(self) -> None:
         tty.msg("Starting mnamer", MessageType.HEADING)
         self._ensure_targets()
@@ -201,5 +205,6 @@ class Cli(Frontend):
 
 
 class Gui(Frontend):
+    @override
     def launch(self):
         pass  # to be implemented in v3

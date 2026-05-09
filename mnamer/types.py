@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Self
 
 
 class MediaType(Enum):
@@ -10,7 +11,7 @@ class MediaType(Enum):
     MOVIE = "movie"
 
     @classmethod
-    def to_media_type(cls) -> type[MediaType]:
+    def to_media_type(cls) -> type[Self]:
         return cls
 
 

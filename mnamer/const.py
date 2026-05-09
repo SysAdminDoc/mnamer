@@ -5,46 +5,79 @@ from pathlib import Path
 from platform import platform, python_version
 from sys import argv, gettrace, version_info
 
-VERSION: str
 
-try:
-    from mnamer.__version__ import __version__ as VERSION  # type: ignore
-except ModuleNotFoundError:
-    from setuptools_scm import get_version  # type: ignore
+def _resolve_version() -> str:
+    try:
+        from mnamer.__version__ import __version__
 
-    VERSION = get_version(root="..", relative_to=__file__, local_scheme="dirty-tag")
+        return __version__
+    except ModuleNotFoundError:
+        from setuptools_scm import get_version  # type: ignore[import-untyped]
 
-try:
-    from appdirs import __version__ as appdirs_version  # type: ignore
-except ModuleNotFoundError:
-    appdirs_version = "N/A"
+        return get_version(root="..", relative_to=__file__, local_scheme="dirty-tag")
 
-try:
-    from appdirs import user_cache_dir
 
-    cache_dir = user_cache_dir()
-except ModuleNotFoundError:
-    cache_dir = "N/A"
+def _resolve_appdirs_version() -> str:
+    try:
+        from appdirs import __version__  # type: ignore[import-untyped]
 
-try:
-    from guessit import __version__ as guessit_version  # type: ignore
-except ModuleNotFoundError:
-    guessit_version = "N/A"
+        return __version__
+    except ModuleNotFoundError:
+        return "N/A"
 
-try:
-    from requests import __version__ as requests_version
-except ModuleNotFoundError:
-    requests_version = "N/A"
 
-try:
-    from requests_cache import __version__ as requests_cache_version
-except ModuleNotFoundError:
-    requests_cache_version = "N/A"
+def _resolve_cache_dir() -> str:
+    try:
+        from appdirs import user_cache_dir  # type: ignore[import-untyped]
 
-try:
-    from teletype import VERSION as teletype_version
-except ModuleNotFoundError:
-    teletype_version = "N/A"
+        return user_cache_dir()
+    except ModuleNotFoundError:
+        return "N/A"
+
+
+def _resolve_guessit_version() -> str:
+    try:
+        from guessit import __version__  # type: ignore[import-untyped]
+
+        return __version__
+    except ModuleNotFoundError:
+        return "N/A"
+
+
+def _resolve_requests_version() -> str:
+    try:
+        from requests import __version__
+
+        return __version__
+    except ModuleNotFoundError:
+        return "N/A"
+
+
+def _resolve_requests_cache_version() -> str:
+    try:
+        from requests_cache import __version__
+
+        return __version__
+    except ModuleNotFoundError:
+        return "N/A"
+
+
+def _resolve_teletype_version() -> str:
+    try:
+        from teletype import VERSION
+
+        return VERSION
+    except ModuleNotFoundError:
+        return "N/A"
+
+
+VERSION: str = _resolve_version()
+appdirs_version: str = _resolve_appdirs_version()
+cache_dir: str = _resolve_cache_dir()
+guessit_version: str = _resolve_guessit_version()
+requests_version: str = _resolve_requests_version()
+requests_cache_version: str = _resolve_requests_cache_version()
+teletype_version: str = _resolve_teletype_version()
 
 
 CACHE_PATH = Path(
