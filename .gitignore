@@ -24,3 +24,7 @@ playground.py
 testing/test_files_*
 venv*
 CLAUDE.md
+
+# Markdown files local-only (except README)
+*.md
+!README.md
