@@ -41,6 +41,7 @@ DEFAULT_SETTINGS = {
     "smart_match": False,
     "targets": [],
     "test": False,
+    "tui": False,
     "verbose": False,
     "version": False,
 }

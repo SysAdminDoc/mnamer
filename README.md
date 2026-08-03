@@ -45,6 +45,9 @@ Video targets also expose `{hdr}` and `{audio}` template values. HDR10, HDR10+,
 Dolby Vision, HLG, and Atmos tags are read from release names; when a tag is
 absent, an installed `ffprobe` is queried briefly for stream metadata.
 
+For an interactive batch preview with per-file accept/reject and inline metadata
+editing, install `pip install "mnamer[tui]"` and run `mnamer --tui TARGET...`.
+
 When a target has an adjacent `.nfo`, `.xml`, or `.json` sidecar, mnamer reads
 local movie, episode, music-video, and provider-ID metadata before contacting an
 online provider. This makes Jellyfin/Plex-compatible library exports

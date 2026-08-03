@@ -40,3 +40,11 @@ def test_smart_match_flag():
         settings.load()
 
     assert settings.smart_match is True
+
+
+def test_tui_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--tui"]):
+        settings.load()
+
+    assert settings.tui is True

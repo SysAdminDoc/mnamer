@@ -215,3 +215,13 @@ class Cli(Frontend):
 class Gui(Frontend):
     def launch(self):
         pass  # to be implemented in v3
+
+
+class Tui(Cli):
+    """Textual preview frontend sharing target discovery with the CLI."""
+
+    def launch(self) -> None:
+        from mnamer.tui import run_tui
+
+        self.success_count = run_tui(self.targets, self.settings)
+        self._report_results()

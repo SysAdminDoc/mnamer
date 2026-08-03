@@ -3,7 +3,7 @@
 from mnamer import tty
 from mnamer.const import IS_DEBUG
 from mnamer.exceptions import MnamerException
-from mnamer.frontends import Cli
+from mnamer.frontends import Cli, Tui
 from mnamer.setting_store import SettingStore
 
 
@@ -19,8 +19,11 @@ def main():  # pragma: no cover
         tty.error(e)
         raise SystemExit(2) from None
     try:
-        frontend = Cli(settings)
+        frontend = Tui(settings) if settings.tui else Cli(settings)
         frontend.launch()
+    except MnamerException as e:
+        tty.error(e)
+        raise SystemExit(2) from None
     except SystemExit:
         raise
     except Exception:

@@ -202,6 +202,15 @@ class SettingStore:
             help="--episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider",
         ).as_dict(),
     )
+    tui: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--tui"],
+            group=SettingType.PARAMETER,
+            help="--tui: preview, edit, accept, or reject files in a Textual UI",
+        ).as_dict(),
+    )
     smart_match: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

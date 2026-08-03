@@ -25,6 +25,9 @@ dependencies = [
 smart-match = [
     "sentence-transformers>=5.6,<6",
 ]
+tui = [
+    "textual>=8.2,<9",
+]
 
 
 [tool.setuptools]
