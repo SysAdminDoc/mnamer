@@ -42,6 +42,10 @@ online provider. This makes Jellyfin/Plex-compatible library exports
 reproducible offline; the configured online provider remains the fallback when
 no usable sidecar is available.
 
+Online providers use a per-provider circuit breaker. Three consecutive network
+failures open the circuit for 30 seconds so a batch fails fast while an API is
+unavailable; a successful retry closes it again.
+
 🧰 [**Settings**](https://github.com/jkwill87/mnamer/wiki/Settings)
 
 ```

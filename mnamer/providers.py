@@ -6,8 +6,10 @@ import datetime as dt
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from functools import wraps
 from os import environ
 from pathlib import Path
+from time import monotonic
 
 from mnamer.endpoints import (
     anidb_anime,
@@ -30,13 +32,35 @@ from mnamer.endpoints import (
     tvmaze_show_lookup,
     tvmaze_show_search,
 )
-from mnamer.exceptions import MnamerException, MnamerNotFoundException
+from mnamer.exceptions import (
+    MnamerException,
+    MnamerNetworkException,
+    MnamerNotFoundException,
+)
 from mnamer.language import Language
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.nfo import read_nfo
 from mnamer.setting_store import SettingStore
 from mnamer.types import MediaType, ProviderType
 from mnamer.utils import parse_date, year_parse, year_range_parse
+
+CIRCUIT_FAILURE_THRESHOLD = 3
+CIRCUIT_RESET_SECONDS = 30
+
+
+def _circuit_protected(search):
+    @wraps(search)
+    def protected(self, *args, **kwargs):
+        self._circuit_before()
+        try:
+            yield from search(self, *args, **kwargs)
+        except MnamerNetworkException:
+            self._circuit_failure()
+            raise
+        else:
+            self._circuit_success()
+
+    return protected
 
 
 class Provider(ABC):
@@ -45,11 +69,38 @@ class Provider(ABC):
     api_key: str | None = None
     cache: bool = True
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        search = cls.__dict__.get("search")
+        if search is not None:
+            cls.search = _circuit_protected(search)  # type: ignore[assignment]
+
     def __init__(self, api_key: str | None = None, cache: bool = True):
         """Initializes the provider."""
         if api_key:
             self.api_key = api_key
         self.cache = cache
+        self._circuit_failures = 0
+        self._circuit_opened_at: float | None = None
+
+    def _circuit_before(self) -> None:
+        if self._circuit_opened_at is None:
+            return
+        if monotonic() - self._circuit_opened_at < CIRCUIT_RESET_SECONDS:
+            raise MnamerNetworkException(
+                f"{type(self).__name__} circuit is open; retry later"
+            )
+        self._circuit_opened_at = None
+        self._circuit_failures = CIRCUIT_FAILURE_THRESHOLD - 1
+
+    def _circuit_failure(self) -> None:
+        self._circuit_failures += 1
+        if self._circuit_failures >= CIRCUIT_FAILURE_THRESHOLD:
+            self._circuit_opened_at = monotonic()
+
+    def _circuit_success(self) -> None:
+        self._circuit_failures = 0
+        self._circuit_opened_at = None
 
     @classmethod
     def from_settings(cls, settings: SettingStore):
@@ -82,6 +133,7 @@ class LocalNfo(Provider):
     """Reads adjacent local metadata before an online provider is queried."""
 
     def __init__(self, source: Path):
+        super().__init__()
         self.source = source
 
     def search(self, query: Metadata) -> Iterator[Metadata]:
