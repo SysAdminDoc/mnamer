@@ -254,7 +254,7 @@ class Tmdb(Provider):
         found = False
         year_from, year_to = year_range_parse(year, 1)
         parsed_year = year_parse(str(year)) if year is not None else None
-        search_years = (
+        search_years: list[int | None] = (
             [None]
             if parsed_year is None
             else [parsed_year, parsed_year - 1, parsed_year + 1]
