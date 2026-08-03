@@ -21,6 +21,11 @@ dependencies = [
     "typing-extensions>=4.7.0",
 ]
 
+[project.optional-dependencies]
+smart-match = [
+    "sentence-transformers>=5.6,<6",
+]
+
 
 [tool.setuptools]
 packages = ["mnamer"]

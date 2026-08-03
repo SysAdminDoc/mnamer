@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
+import mnamer.matching as matching
 from mnamer.metadata import MetadataMovie
 from mnamer.providers import Tmdb
 
@@ -34,3 +35,28 @@ def test_tmdb_provider__searches_adjacent_release_years(mock_search):
 
     assert searched_years == [2020, 2019, 2021]
     assert [result.year for result in results] == [2020, 2019, 2021]
+
+
+def test_rank_matches__semantic_title_score(monkeypatch):
+    class FakeModel:
+        def encode(self, titles, normalize_embeddings):
+            assert normalize_embeddings is True
+            vectors = {
+                "Mangled Release": [1.0, 0.0],
+                "Unrelated Movie": [0.0, 1.0],
+                "Correct Catalog Title": [0.9, 0.1],
+            }
+            return [vectors[title] for title in titles]
+
+    monkeypatch.setattr(matching, "_MODEL", FakeModel())
+    monkeypatch.setattr(matching, "_MODEL_INITIALIZED", True)
+    query = MetadataMovie(name="Mangled Release")
+    matches = [
+        MetadataMovie(name="Unrelated Movie"),
+        MetadataMovie(name="Correct Catalog Title"),
+    ]
+
+    assert [match.name for match in matching.rank_matches(query, matches)] == [
+        "Correct Catalog Title",
+        "Unrelated Movie",
+    ]

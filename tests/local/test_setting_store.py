@@ -1,3 +1,6 @@
+import sys
+from unittest.mock import patch
+
 import pytest
 
 from mnamer.setting_store import SettingStore
@@ -29,3 +32,11 @@ def test_api_key_for(api: ProviderType):
     settings = SettingStore()
     setattr(settings, f"api_key_{api.value}", "xxx")
     assert settings.api_key_for(api) == "xxx"
+
+
+def test_smart_match_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--smart-match"]):
+        settings.load()
+
+    assert settings.smart_match is True

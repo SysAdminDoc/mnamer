@@ -38,6 +38,7 @@ DEFAULT_SETTINGS = {
     "replace_after": {"&": "and", ";": ",", "@": "at"},
     "replace_before": {},
     "scene": False,
+    "smart_match": False,
     "targets": [],
     "test": False,
     "verbose": False,

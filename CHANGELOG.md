@@ -22,6 +22,8 @@ All notable changes to mnamer will be documented in this file.
   provider lookup behavior.
 - Text-based subtitles without a filename language code now receive a
   conservative automatic language detection result when the dialogue is clear.
+- Added opt-in `--smart-match` semantic title reranking using the optional
+  `sentence-transformers` extra.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

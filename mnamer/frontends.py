@@ -100,6 +100,8 @@ class Cli(Frontend):
                 tty.msg("no matches found", MessageType.ALERT)
             except MnamerNetworkException:
                 tty.msg("network error", MessageType.ALERT)
+            if target.smart_match_error:
+                tty.msg(target.smart_match_error, MessageType.ALERT)
             if not matches and self.settings.no_guess:
                 tty.msg("skipping (--no-guess)", MessageType.ALERT)
                 continue

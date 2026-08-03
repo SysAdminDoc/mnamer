@@ -202,6 +202,15 @@ class SettingStore:
             help="--episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider",
         ).as_dict(),
     )
+    smart_match: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--smart-match"],
+            group=SettingType.PARAMETER,
+            help="--smart-match: rerank title matches with sentence embeddings",
+        ).as_dict(),
+    )
     artwork: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

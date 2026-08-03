@@ -14,6 +14,7 @@ from mnamer.const import MUSIC_CONTAINERS
 from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
+from mnamer.matching import SmartMatchUnavailable, rank_matches
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.providers import LocalNfo, Provider
 from mnamer.setting_store import SettingStore
@@ -42,6 +43,7 @@ class Target:
     _has_renamed: bool
     artwork_error: str | None
     artwork_downloaded: list[Path]
+    smart_match_error: str | None
     _raw_metadata: dict[str, str]
     _parsed_metadata: Metadata
 
@@ -55,6 +57,7 @@ class Target:
         self._has_renamed = False
         self.artwork_error = None
         self.artwork_downloaded = []
+        self.smart_match_error = None
         self._parse(file_path)
         self._replace_before()
         self._override_metadata_ids()
@@ -273,11 +276,17 @@ class Target:
 
     def query(self) -> list[Metadata]:
         """Queries the target's respective media provider for metadata."""
+        self.smart_match_error = None
         results: Iterator[Metadata]
         try:
             results = iter([next(LocalNfo(self.source).search(self.metadata))])
         except MnamerException:
             results = self._provider.search(self.metadata)
+        if self._settings.smart_match:
+            try:
+                results = iter(rank_matches(self.metadata, list(results)))
+            except SmartMatchUnavailable as error:
+                self.smart_match_error = str(error)
         seen = set()
         response = []
         for idx, result in enumerate(results, start=1):

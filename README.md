@@ -36,6 +36,11 @@ Language is supported by the default TMDb and TVDb providers. You can use the `-
 
 mnamer also supports subtitle files (.srt, .idx, .sub). It will use the format pattern used for movie or episode media files with its extension prefixed by its 2-letter language code. When a subtitle filename has no language code, dialogue in text-based `.srt` and `.sub` files is detected conservatively; ambiguous or unsupported files still use the normal prompt or batch skip behavior.
 
+For mangled releases, install the optional smart-match extra with `pip install
+"mnamer[smart-match]"` and pass `--smart-match`. It uses the
+`all-MiniLM-L6-v2` embedding model to rerank provider results and downloads the
+model on first use.
+
 When a target has an adjacent `.nfo`, `.xml`, or `.json` sidecar, mnamer reads
 local movie, episode, music-video, and provider-ID metadata before contacting an
 online provider. This makes Jellyfin/Plex-compatible library exports
