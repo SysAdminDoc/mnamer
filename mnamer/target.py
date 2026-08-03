@@ -154,6 +154,8 @@ class Target:
                     v
                     if k == "alternative_title"
                     and raw_data.get("type") == MediaType.MUSIC.value
+                    or k == "episode"
+                    and raw_data.get("type") == MediaType.EPISODE.value
                     else v[0]
                 )
         if self._settings.media:
@@ -202,7 +204,12 @@ class Target:
             self.metadata.year = path_data.get("year")
         elif isinstance(self.metadata, MetadataEpisode):
             self.metadata.date = path_data.get("date")
-            self.metadata.episode = path_data.get("episode")
+            episodes = path_data.get("episode")
+            if isinstance(episodes, list):
+                self.metadata.episodes = episodes
+                self.metadata.episode = episodes[0] if episodes else None
+            else:
+                self.metadata.episode = episodes
             self.metadata.season = path_data.get("season")
             self.metadata.series = path_data.get("title")
             alternative_title = path_data.get("alternative_title")

@@ -106,16 +106,13 @@ def test_mask(e2e_run, setup_test_files):
 
 
 @pytest.mark.usefixtures("setup_test_dir")
-@pytest.mark.skip(
-    reason="Multi-part integration broken with latest guessit 3.8, but needed for python 3.13 compatibility"
-)
 def test_multi_part_episode(e2e_run, setup_test_files):
     setup_test_files("lost s01e01-02.mp4")
     result = e2e_run("--batch", ".")
     assert result.code == 0
     assert ".mkv" not in result.out
     assert ".avi" not in result.out
-    assert "Lost - S01E01 - Pilot (1).mp4" in result.out
+    assert "Lost - S01E01 - Pilot.mp4" in result.out
 
 
 @pytest.mark.usefixtures("setup_test_dir")

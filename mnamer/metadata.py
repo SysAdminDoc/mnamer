@@ -146,6 +146,7 @@ class MetadataEpisode(Metadata):
     series: str | None = None
     season: int | None = None
     episode: int | None = None
+    episodes: list[int] | None = None
     date: dt.date | None = None
     title: str | None = None
     id_anidb: str | None = None
@@ -168,10 +169,19 @@ class MetadataEpisode(Metadata):
         s = str_fix_padding(s)
         return s
 
+    def as_dict(self) -> dict[str, Any]:
+        data = super().as_dict()
+        if self.episodes:
+            episode_range = "-".join(f"{episode:02}" for episode in self.episodes)
+            data["episodes"] = episode_range
+            data["episode_range"] = episode_range
+        return data
+
     def __setattr__(self, key: str, value: Any):
         converter_map: dict[str, Callable] = {
             "date": parse_date,
             "episode": int,
+            "episodes": lambda values: [int(value) for value in values],
             "season": int,
             "series": fn_pipe(str_replace_slashes, str_title_case),
             "title": fn_pipe(str_replace_slashes, str_title_case),

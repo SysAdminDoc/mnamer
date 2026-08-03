@@ -50,6 +50,11 @@ Movie title searches include the parsed release year plus the adjacent years,
 which covers releases whose filesystem year differs from the catalog year at a
 December boundary.
 
+Episode packs such as `S01E01E02`, `S01E01-E02`, and lowercase `e01-e02` retain
+all detected episode numbers. The first episode remains the lookup key for
+existing providers, and `{episode_range}` is available in episode formats for
+pack-aware naming.
+
 🧰 [**Settings**](https://github.com/jkwill87/mnamer/wiki/Settings)
 
 ```

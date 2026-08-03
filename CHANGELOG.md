@@ -17,6 +17,9 @@ All notable changes to mnamer will be documented in this file.
   processing fails fast while an API is unavailable.
 - TMDb movie title searches now include the adjacent release years to tolerate
   late-December catalog and filename year boundaries.
+- Multi-episode filenames now retain all detected episode numbers and expose an
+  `{episode_range}` format value while preserving the existing first-episode
+  provider lookup behavior.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 
