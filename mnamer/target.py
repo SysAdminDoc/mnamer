@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Iterator
 from os import environ, path
 from pathlib import Path
 from shutil import move
@@ -14,7 +15,7 @@ from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
-from mnamer.providers import Provider
+from mnamer.providers import LocalNfo, Provider
 from mnamer.setting_store import SettingStore
 from mnamer.types import MediaType, ProviderType
 from mnamer.utils import (
@@ -262,9 +263,11 @@ class Target:
 
     def query(self) -> list[Metadata]:
         """Queries the target's respective media provider for metadata."""
-        results = self._provider.search(self.metadata)
-        if not results:
-            return []
+        results: Iterator[Metadata]
+        try:
+            results = iter([next(LocalNfo(self.source).search(self.metadata))])
+        except MnamerException:
+            results = self._provider.search(self.metadata)
         seen = set()
         response = []
         for idx, result in enumerate(results, start=1):

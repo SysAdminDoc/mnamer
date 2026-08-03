@@ -36,6 +36,12 @@ Language is supported by the default TMDb and TVDb providers. You can use the `-
 
 mnamer also supports subtitle files (.srt, .idx, .sub). It will use the format pattern used for movie or episode media files with its extension prefixed by its 2-letter language code.
 
+When a target has an adjacent `.nfo`, `.xml`, or `.json` sidecar, mnamer reads
+local movie, episode, music-video, and provider-ID metadata before contacting an
+online provider. This makes Jellyfin/Plex-compatible library exports
+reproducible offline; the configured online provider remains the fallback when
+no usable sidecar is available.
+
 🧰 [**Settings**](https://github.com/jkwill87/mnamer/wiki/Settings)
 
 ```

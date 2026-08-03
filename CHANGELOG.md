@@ -11,6 +11,8 @@ All notable changes to mnamer will be documented in this file.
   media files.
 - Added MusicBrainz metadata lookup for music tracks and audiobook chapters,
   including automatic audio-container detection and configurable music formats.
+- Added local-first NFO/XML/JSON sidecar metadata for movie, episode, and music
+  targets with online-provider fallback.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

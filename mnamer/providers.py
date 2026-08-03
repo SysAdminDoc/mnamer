@@ -7,6 +7,7 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from os import environ
+from pathlib import Path
 
 from mnamer.endpoints import (
     anidb_anime,
@@ -32,6 +33,7 @@ from mnamer.endpoints import (
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
 from mnamer.language import Language
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
+from mnamer.nfo import read_nfo
 from mnamer.setting_store import SettingStore
 from mnamer.types import MediaType, ProviderType
 from mnamer.utils import parse_date, year_parse, year_range_parse
@@ -74,6 +76,19 @@ class Provider(ABC):
             ProviderType.OMDB: Omdb,
         }[provider]
         return provider_cls.from_settings(settings)
+
+
+class LocalNfo(Provider):
+    """Reads adjacent local metadata before an online provider is queried."""
+
+    def __init__(self, source: Path):
+        self.source = source
+
+    def search(self, query: Metadata) -> Iterator[Metadata]:
+        metadata = read_nfo(self.source, query)
+        if metadata is None:
+            raise MnamerNotFoundException
+        yield metadata
 
 
 class Omdb(Provider):
@@ -745,3 +760,4 @@ class MusicBrainz(Provider):
 Anidb = AniDB
 Anilist = AniList
 Musicbrainz = MusicBrainz
+Nfo = LocalNfo
