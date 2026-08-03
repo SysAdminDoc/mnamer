@@ -41,6 +41,10 @@ For mangled releases, install the optional smart-match extra with `pip install
 `all-MiniLM-L6-v2` embedding model to rerank provider results and downloads the
 model on first use.
 
+Video targets also expose `{hdr}` and `{audio}` template values. HDR10, HDR10+,
+Dolby Vision, HLG, and Atmos tags are read from release names; when a tag is
+absent, an installed `ffprobe` is queried briefly for stream metadata.
+
 When a target has an adjacent `.nfo`, `.xml`, or `.json` sidecar, mnamer reads
 local movie, episode, music-video, and provider-ID metadata before contacting an
 online provider. This makes Jellyfin/Plex-compatible library exports

@@ -24,6 +24,8 @@ All notable changes to mnamer will be documented in this file.
   conservative automatic language detection result when the dialogue is clear.
 - Added opt-in `--smart-match` semantic title reranking using the optional
   `sentence-transformers` extra.
+- Added `{hdr}` and `{audio}` format values with filename and optional ffprobe
+  detection for HDR, Dolby Vision, HLG, and Atmos tags.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

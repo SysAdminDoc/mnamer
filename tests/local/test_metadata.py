@@ -33,6 +33,12 @@ def test_metadata__convert_quality(value):
     assert metadata.quality == "test"
 
 
+def test_metadata__format_media_tags():
+    metadata = MetadataMovie(name="Example", hdr="hdr10+ dv", audio="atmos")
+
+    assert format(metadata, "{name} {hdr} {audio}") == "Example HDR10+ DV Atmos"
+
+
 def test_metadata__format():
     with pytest.raises(NotImplementedError):
         format(Metadata())

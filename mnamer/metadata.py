@@ -45,6 +45,8 @@ class Metadata:
     language_sub: Language | None = None
     quality: str | None = None
     synopsis: str | None = None
+    hdr: str | None = None
+    audio: str | None = None
 
     @classmethod
     def to_media_type(cls) -> MediaType:
@@ -66,6 +68,8 @@ class Metadata:
             "media": MediaType,
             "quality": str.lower,
             "synopsis": str.capitalize,
+            "hdr": str.upper,
+            "audio": str.title,
         }
         converter: Callable | None = converter_map.get(key)
         if value is not None and converter:

@@ -15,6 +15,7 @@ from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
 from mnamer.matching import SmartMatchUnavailable, rank_matches
+from mnamer.media_tags import detect_media_tags
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.providers import LocalNfo, Provider
 from mnamer.setting_store import SettingStore
@@ -190,6 +191,9 @@ class Target:
                 )
             )
             or None
+        )
+        self.metadata.hdr, self.metadata.audio = detect_media_tags(
+            self.source, raw_data
         )
         self.metadata.language = path_data.get("language")
         self.metadata.group = path_data.get("release_group")
