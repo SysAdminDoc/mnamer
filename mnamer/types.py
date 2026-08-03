@@ -8,6 +8,7 @@ from enum import Enum
 class MediaType(Enum):
     EPISODE = "episode"
     MOVIE = "movie"
+    MUSIC = "music"
 
     @classmethod
     def to_media_type(cls) -> type[MediaType]:
@@ -27,6 +28,7 @@ class ProviderType(Enum):
     TVMAZE = "tvmaze"
     ANIDB = "anidb"
     ANILIST = "anilist"
+    MUSICBRAINZ = "musicbrainz"
     TMDB = "tmdb"
     OMDB = "omdb"
 

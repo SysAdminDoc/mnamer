@@ -12,6 +12,8 @@ from mnamer.endpoints import (
     anidb_anime,
     anilist_media,
     anilist_search,
+    musicbrainz_recording,
+    musicbrainz_search,
     omdb_search,
     omdb_title,
     tmdb_movies,
@@ -29,10 +31,10 @@ from mnamer.endpoints import (
 )
 from mnamer.exceptions import MnamerException, MnamerNotFoundException
 from mnamer.language import Language
-from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie
+from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.setting_store import SettingStore
 from mnamer.types import MediaType, ProviderType
-from mnamer.utils import parse_date, year_range_parse
+from mnamer.utils import parse_date, year_parse, year_range_parse
 
 
 class Provider(ABC):
@@ -68,6 +70,7 @@ class Provider(ABC):
             ProviderType.TVMAZE: TvMaze,
             ProviderType.ANIDB: AniDB,
             ProviderType.ANILIST: AniList,
+            ProviderType.MUSICBRAINZ: MusicBrainz,
             ProviderType.OMDB: Omdb,
         }[provider]
         return provider_cls.from_settings(settings)
@@ -663,7 +666,82 @@ class AniDB(Provider):
             raise MnamerNotFoundException
 
 
+def _music_artist(entry: dict) -> str | None:
+    """Build an artist name from MusicBrainz artist-credit entries."""
+    parts = []
+    for credit in entry.get("artist-credit") or []:
+        if isinstance(credit, str):
+            parts.append(credit)
+            continue
+        if not isinstance(credit, dict):
+            continue
+        artist = credit.get("name") or (credit.get("artist") or {}).get("name")
+        if artist:
+            parts.append(str(artist))
+            parts.append(str(credit.get("joinphrase") or ""))
+    artist = "".join(parts).strip()
+    return artist or None
+
+
+def _music_release(entry: dict) -> dict:
+    releases = entry.get("releases") or []
+    return next((release for release in releases if isinstance(release, dict)), {})
+
+
+def _music_year(entry: dict, release: dict) -> int | None:
+    value = entry.get("first-release-date") or release.get("date")
+    return year_parse(value) if value else None
+
+
+class MusicBrainz(Provider):
+    """Queries MusicBrainz for music tracks and audiobook chapters."""
+
+    api_key = None
+
+    def search(self, query: MetadataMusic) -> Iterator[MetadataMusic]:
+        assert query
+        if query.id_musicbrainz:
+            entries = [musicbrainz_recording(query.id_musicbrainz, cache=self.cache)]
+        elif any((query.title, query.artist, query.album)):
+            response = musicbrainz_search(
+                title=query.title,
+                artist=query.artist,
+                album=query.album,
+                limit=10,
+                cache=self.cache,
+            )
+            entries = response.get("recordings", [])
+        else:
+            raise MnamerNotFoundException
+
+        found = False
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            metadata = self._transform_entry(entry, query)
+            if not metadata.title:
+                continue
+            found = True
+            yield metadata
+        if not found:
+            raise MnamerNotFoundException
+
+    @staticmethod
+    def _transform_entry(entry: dict, query: MetadataMusic) -> MetadataMusic:
+        release = _music_release(entry)
+        return MetadataMusic(
+            artist=_music_artist(entry) or query.artist,
+            album=release.get("title") or query.album,
+            title=entry.get("title") or query.title,
+            track=query.track,
+            year=_music_year(entry, release),
+            id_musicbrainz=entry.get("id"),
+            language=query.language,
+        )
+
+
 # Keep the acronym-preserving names public while matching the existing
 # ``Tvdb``/``TvMaze`` naming convention for callers that prefer it.
 Anidb = AniDB
 Anilist = AniList
+Musicbrainz = MusicBrainz

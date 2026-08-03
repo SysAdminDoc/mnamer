@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from re import match
 from time import sleep
 
+from mnamer.const import VERSION
 from mnamer.exceptions import (
     MnamerException,
     MnamerNetworkException,
@@ -25,6 +26,7 @@ MAX_RETRIES = 5
 ANILIST_URL = "https://graphql.anilist.co"
 ANIDB_URL = "http://api.anidb.net:9001/httpapi"
 FANART_URL = "https://webservice.fanart.tv/v3.2"
+MUSICBRAINZ_URL = "https://musicbrainz.org/ws/2"
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 
 ANILIST_MEDIA_FIELDS = """
@@ -231,6 +233,75 @@ def fanart_image(url: str, cache: bool = True) -> bytes:
     status, content = request_bytes(url, cache=cache)
     if status != 200 or not content:  # pragma: no cover
         raise MnamerNetworkException("Fanart.tv image unavailable?")
+    return content
+
+
+def _musicbrainz_request(path: str, parameters: dict, cache: bool) -> dict:
+    status, content = request_json(
+        f"{MUSICBRAINZ_URL}/{path}",
+        parameters=parameters,
+        headers={
+            "accept": "application/json",
+            "user-agent": (
+                f"mnamer/{VERSION} (https://github.com/SysAdminDoc/mnamer)"
+            ),
+        },
+        cache=cache,
+    )
+    if status == 404:
+        raise MnamerNotFoundException
+    if status != 200 or not isinstance(content, dict):  # pragma: no cover
+        raise MnamerNetworkException("MusicBrainz down or unavailable?")
+    return content
+
+
+def _musicbrainz_query_value(value: str) -> str:
+    return '"{}"'.format(value.replace("\\", "\\\\").replace('"', '\\"'))
+
+
+def musicbrainz_search(
+    title: str | None = None,
+    artist: str | None = None,
+    album: str | None = None,
+    limit: int = 10,
+    cache: bool = True,
+) -> dict:
+    """Search MusicBrainz recording metadata by title, artist, or release."""
+    if not any((title, artist, album)):
+        raise MnamerException("a title, artist, or album must be specified")
+    if limit < 1 or limit > 100:
+        raise MnamerException("limit must be between 1 and 100")
+    clauses = []
+    if title:
+        clauses.append(f"recording:{_musicbrainz_query_value(title)}")
+    if artist:
+        clauses.append(f"artist:{_musicbrainz_query_value(artist)}")
+    if album:
+        clauses.append(f"release:{_musicbrainz_query_value(album)}")
+    content = _musicbrainz_request(
+        "recording",
+        {"query": " AND ".join(clauses), "fmt": "json", "limit": limit},
+        cache,
+    )
+    if not content.get("recordings"):
+        raise MnamerNotFoundException
+    return content
+
+
+def musicbrainz_recording(
+    id_musicbrainz: str,
+    cache: bool = True,
+) -> dict:
+    """Look up one MusicBrainz recording by its stable id."""
+    if not id_musicbrainz:
+        raise MnamerException("id_musicbrainz must be specified")
+    content = _musicbrainz_request(
+        f"recording/{id_musicbrainz}",
+        {"fmt": "json", "inc": "artist-credits+releases"},
+        cache,
+    )
+    if not content.get("id"):
+        raise MnamerNotFoundException
     return content
 
 

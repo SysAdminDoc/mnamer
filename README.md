@@ -10,7 +10,7 @@
 
 mnamer (**m**edia re**namer**) is an intelligent and highly configurable media organization utility. It parses media filenames for metadata, searches the web to fill in the blanks, and then renames and moves them.
 
-Currently it has integration support with [TVDb](https://thetvdb.com), [TvMaze](https://www.tvmaze.com), [AniDB](https://anidb.net), and [AniList](https://anilist.co) for television episodes and [TMDb](https://www.themoviedb.org/) and [OMDb](https://www.omdbapi.com) for movies.
+Currently it has integration support with [TVDb](https://thetvdb.com), [TvMaze](https://www.tvmaze.com), [AniDB](https://anidb.net), and [AniList](https://anilist.co) for television episodes, [TMDb](https://www.themoviedb.org/) and [OMDb](https://www.omdbapi.com) for movies, and [MusicBrainz](https://musicbrainz.org) for music and audiobook files.
 
 <img src="https://github.com/jkwill87/mnamer/raw/main/assets/screenshot.png" width="750"/>
 
@@ -28,7 +28,7 @@ Check out the [wiki page](https://github.com/jkwill87/mnamer/wiki) for more deta
 
 ✍️ [**Formatting**](https://github.com/jkwill87/mnamer/wiki/Formatting)
 
-Using the **episode-directory**, **episode-format**, **movie-directory**, or **movie-format** settings you customize how your files are renamed. Variables wrapped in braces `{}` get substituted with of parsed values of template field variables.
+Using the **episode-directory**, **episode-format**, **movie-directory**, **movie-format**, or **music-format** settings you customize how your files are renamed. Variables wrapped in braces `{}` get substituted with of parsed values of template field variables.
 
 🌐 [**Internationalization**](https://github.com/jkwill87/mnamer/wiki/Internationalization)
 
@@ -68,6 +68,9 @@ PARAMETERS:
   --episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider
   --episode-directory: set episode relocation directory
   --episode-format: set episode renaming format specification
+  --music-api={*musicbrainz}: set music api provider
+  --music-directory: set music relocation directory
+  --music-format: set music renaming format specification
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
@@ -84,8 +87,9 @@ DIRECTIVES:
   --id-tvmaze=<ID>: specify a TvMaze series id override
   --id-anidb=<ID>: specify an AniDB anime id override
   --id-anilist=<ID>: specify an AniList anime id override
+  --id-musicbrainz=<ID>: specify a MusicBrainz recording id override
   --no-cache: disable request cache
-  --media={movie,episode}: override media detection
+  --media={movie,episode,music}: override media detection
   --test: mocks the renaming and moving of files
 ```
 
@@ -108,6 +112,15 @@ Artwork downloading is opt-in. Set `API_KEY_FANART` (or `api_key_fanart` in the
 configuration file) and pass `--artwork`; artwork is written as `poster`,
 `fanart`, and `logo` beside the renamed media when Fanart.tv has a matching
 TMDb/IMDb movie id or TVDb series id.
+
+### MusicBrainz provider
+
+Common music containers (`.aac`, `.flac`, `.m4a`, `.m4b`, `.mp3`, `.ogg`,
+`.opus`, and `.wav`) are detected as music automatically. The default
+MusicBrainz format is `{artist} - {album} - {track:02} - {title}.{extension}`;
+use `--music-api=musicbrainz` or `--media=music` when a filename needs an
+explicit override. MusicBrainz does not require an API key; requests identify
+mnamer with a descriptive User-Agent.
 
 ## Contributions
 

@@ -52,6 +52,8 @@ class Metadata:
             return MediaType.EPISODE
         elif cls is MetadataMovie:
             return MediaType.MOVIE
+        elif cls is MetadataMusic:
+            return MediaType.MUSIC
         else:
             raise ValueError(f"Unknown metadata class: {cls}")
 
@@ -173,6 +175,37 @@ class MetadataEpisode(Metadata):
             "season": int,
             "series": fn_pipe(str_replace_slashes, str_title_case),
             "title": fn_pipe(str_replace_slashes, str_title_case),
+        }
+        converter: Callable | None = converter_map.get(key)
+        if value is not None and converter:
+            value = converter(value)
+        super().__setattr__(key, value)
+
+
+@dataclasses.dataclass
+class MetadataMusic(Metadata):
+    """Metadata specific to music tracks and audiobook chapters."""
+
+    artist: str | None = None
+    album: str | None = None
+    track: int | None = None
+    title: str | None = None
+    year: int | None = None
+    id_musicbrainz: str | None = None
+
+    def __format__(self, format_spec: str | None):
+        default = "{artist} - {album} - {track:02} - {title}"
+        re_pattern = r"({(\w+)(?:\[[\w:]+\])?(?:\:\d{1,2})?})"
+        s = re.sub(re_pattern, self._format_repl, format_spec or default)
+        return str_fix_padding(s)
+
+    def __setattr__(self, key: str, value: Any):
+        converter_map: dict[str, Callable] = {
+            "album": fn_pipe(str_replace_slashes, str_title_case),
+            "artist": fn_pipe(str_replace_slashes, str_title_case),
+            "title": fn_pipe(str_replace_slashes, str_title_case),
+            "track": int,
+            "year": year_parse,
         }
         converter: Callable | None = converter_map.get(key)
         if value is not None and converter:

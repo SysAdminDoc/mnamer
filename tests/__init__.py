@@ -1,7 +1,7 @@
 import datetime as dt
 from typing import Any, NamedTuple
 
-from mnamer.const import SUBTITLE_CONTAINERS
+from mnamer.const import MUSIC_CONTAINERS, SUBTITLE_CONTAINERS
 from mnamer.language import Language
 from mnamer.types import ProviderType
 
@@ -17,13 +17,19 @@ DEFAULT_SETTINGS = {
     "id_tmdb": None,
     "id_tvdb": None,
     "id_tvmaze": None,
+    "id_musicbrainz": None,
     "ignore": [".*sample.*", "^RARBG.*"],
     "lower": False,
-    "mask": [".avi", ".m4v", ".mp4", ".mkv", ".ts", ".wmv"] + SUBTITLE_CONTAINERS,
+    "mask": [".avi", ".m4v", ".mp4", ".mkv", ".ts", ".wmv"]
+    + SUBTITLE_CONTAINERS
+    + MUSIC_CONTAINERS,
     "media": None,
     "movie_api": ProviderType.TMDB,
     "movie_directory": None,
     "movie_format": "{name} ({year}).{extension}",
+    "music_api": ProviderType.MUSICBRAINZ,
+    "music_directory": None,
+    "music_format": "{artist} - {album} - {track:02} - {title}.{extension}",
     "no_cache": False,
     "no_guess": False,
     "no_overwrite": False,

@@ -58,6 +58,16 @@ DEPRECATED = {"no_replace", "replacements"}
 IS_DEBUG = gettrace() is not None
 
 SUBTITLE_CONTAINERS = [".srt", ".idx", ".sub"]
+MUSIC_CONTAINERS = [
+    ".aac",
+    ".flac",
+    ".m4a",
+    ".m4b",
+    ".mp3",
+    ".ogg",
+    ".opus",
+    ".wav",
+]
 
 
 SYSTEM = {

@@ -9,6 +9,8 @@ All notable changes to mnamer will be documented in this file.
   configuration file.
 - Added opt-in Fanart.tv poster, fanart, and logo downloads alongside relocated
   media files.
+- Added MusicBrainz metadata lookup for music tracks and audiobook chapters,
+  including automatic audio-container detection and configurable music formats.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

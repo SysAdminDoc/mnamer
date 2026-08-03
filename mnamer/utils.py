@@ -251,10 +251,10 @@ def request_json(
         headers["content-length"] = str(len(body))
     else:
         method = "GET"
-    headers["user-agent"] = (
+    headers.setdefault("user-agent", (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
         "like Gecko) Chrome/79.0.3945.88 Safari/537.36"
-    )
+    ))
 
     initial_cache_state = session._disabled  # yes, i'm a bad person
     try:
@@ -300,10 +300,10 @@ def request_text(
         headers["content-length"] = str(len(body))
     else:
         method = "GET"
-    headers["user-agent"] = (
+    headers.setdefault("user-agent", (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
         "like Gecko) Chrome/79.0.3945.88 Safari/537.36"
-    )
+    ))
 
     initial_cache_state = session._disabled  # type: ignore[attr-defined]
     try:

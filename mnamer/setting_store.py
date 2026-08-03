@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from mnamer.argument import ArgLoader
-from mnamer.const import SUBTITLE_CONTAINERS
+from mnamer.const import MUSIC_CONTAINERS, SUBTITLE_CONTAINERS
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
 from mnamer.metadata import Metadata
@@ -116,7 +116,8 @@ class SettingStore:
             "ts",
             "wmv",
         ]
-        + SUBTITLE_CONTAINERS,
+        + SUBTITLE_CONTAINERS
+        + MUSIC_CONTAINERS,
         metadata=SettingSpec(
             flags=["--mask"],
             group=SettingType.PARAMETER,
@@ -232,6 +233,38 @@ class SettingStore:
             help="--episode-format: set episode renaming format specification",
         ).as_dict(),
     )
+    music_api: ProviderType | str = dataclasses.field(
+        default=ProviderType.MUSICBRAINZ,
+        metadata=SettingSpec(
+            choices=[ProviderType.MUSICBRAINZ.value],
+            dest="music_api",
+            flags=["--music_api", "--music-api", "--musicapi"],
+            group=SettingType.PARAMETER,
+            help="--music-api={*musicbrainz}: set music api provider",
+        ).as_dict(),
+    )
+    music_directory: Path | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            dest="music_directory",
+            flags=[
+                "--music_directory",
+                "--music-directory",
+                "--musicdirectory",
+            ],
+            group=SettingType.PARAMETER,
+            help="--music-directory: set music relocation directory",
+        ).as_dict(),
+    )
+    music_format: str = dataclasses.field(
+        default="{artist} - {album} - {track:02} - {title}.{extension}",
+        metadata=SettingSpec(
+            dest="music_format",
+            flags=["--music_format", "--music-format", "--musicformat"],
+            group=SettingType.PARAMETER,
+            help="--music-format: set music renaming format specification",
+        ).as_dict(),
+    )
 
     # directive attributes -----------------------------------------------------
 
@@ -330,6 +363,18 @@ class SettingStore:
             help="--id-anilist=<ID>: specify an AniList anime id override",
         ).as_dict(),
     )
+    id_musicbrainz: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            flags=[
+                "--id_musicbrainz",
+                "--id-musicbrainz",
+                "--idmusicbrainz",
+            ],
+            group=SettingType.DIRECTIVE,
+            help="--id-musicbrainz=<ID>: specify a MusicBrainz recording id override",
+        ).as_dict(),
+    )
     no_cache: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(
@@ -343,10 +388,14 @@ class SettingStore:
     media: MediaType | None = dataclasses.field(
         default=None,
         metadata=SettingSpec(
-            choices=[MediaType.EPISODE.value, MediaType.MOVIE.value],
+            choices=[
+                MediaType.EPISODE.value,
+                MediaType.MOVIE.value,
+                MediaType.MUSIC.value,
+            ],
             flags=["--media"],
             group=SettingType.DIRECTIVE,
-            help="--media={movie,episode}: override media detection",
+            help="--media={movie,episode,music}: override media detection",
         ).as_dict(),
     )
     test: bool = dataclasses.field(
@@ -389,6 +438,10 @@ class SettingStore:
         default=None,
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
     )
+    api_key_musicbrainz: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
+    )
     replace_before: dict[str, str] = dataclasses.field(
         default_factory=lambda: {},
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
@@ -419,6 +472,8 @@ class SettingStore:
             "media": MediaType,
             "movie_api": ProviderType,
             "movie_directory": self._resolve_path,
+            "music_api": ProviderType,
+            "music_directory": self._resolve_path,
             "targets": lambda targets: [Path(target) for target in targets],
         }
         converter: Callable | None = converter_map.get(key)

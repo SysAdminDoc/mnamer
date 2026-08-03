@@ -9,10 +9,11 @@ from urllib.parse import urlparse
 
 from guessit import guessit  # type: ignore
 
+from mnamer.const import MUSIC_CONTAINERS
 from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
-from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie
+from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.providers import Provider
 from mnamer.setting_store import SettingStore
 from mnamer.types import MediaType, ProviderType
@@ -128,8 +129,15 @@ class Target:
                 file_path = Path(self.source.parent, self.source.stem[:-2])
             except MnamerException:
                 pass
-        options = {"type": self._settings.media, "language": path_data["language"]}
+        media_override = getattr(self._settings.media, "value", self._settings.media)
+        options = {"type": media_override, "language": path_data["language"]}
         raw_data = dict(guessit(str(file_path), options))
+        if (
+            not self._settings.media
+            and file_path.suffix.lower() in MUSIC_CONTAINERS
+        ):
+            options = {**options, "type": MediaType.MUSIC.value}
+            raw_data = dict(guessit(str(file_path), options))
         if isinstance(raw_data.get("season"), list):
             raw_data = dict(guessit(str(file_path.parts[-1]), options))
         for k, v in raw_data.items():
@@ -141,7 +149,12 @@ class Target:
             elif isinstance(v, int | str | dt.date):
                 path_data[k] = v
             elif isinstance(v, list) and all(isinstance(_, int | str) for _ in v):
-                path_data[k] = v[0]
+                path_data[k] = (
+                    v
+                    if k == "alternative_title"
+                    and raw_data.get("type") == MediaType.MUSIC.value
+                    else v[0]
+                )
         if self._settings.media:
             media_type = self._settings.media
         elif path_data.get("type"):
@@ -151,6 +164,7 @@ class Target:
         meta_cls = {
             MediaType.EPISODE: MetadataEpisode,
             MediaType.MOVIE: MetadataMovie,
+            MediaType.MUSIC: MetadataMusic,
             None: Metadata,
         }[media_type]
         self.metadata = meta_cls()
@@ -197,9 +211,27 @@ class Target:
             # year = path_data.get("year")
             # if year:
             #     self.metadata.series = f"{self.metadata.series} {year}"
+        elif isinstance(self.metadata, MetadataMusic):
+            alternatives = path_data.get("alternative_title")
+            if isinstance(alternatives, list):
+                self.metadata.album = alternatives[0] if len(alternatives) > 1 else None
+                self.metadata.title = alternatives[-1] if alternatives else None
+            else:
+                self.metadata.title = alternatives or path_data.get("episode_title")
+            self.metadata.artist = path_data.get("artist") or path_data.get("title")
+            self.metadata.track = path_data.get("track") or path_data.get("episode")
+            self.metadata.year = path_data.get("year")
 
     def _override_metadata_ids(self):
-        id_types = {"anidb", "anilist", "imdb", "tmdb", "tvdb", "tvmaze"}
+        id_types = {
+            "anidb",
+            "anilist",
+            "imdb",
+            "musicbrainz",
+            "tmdb",
+            "tvdb",
+            "tvmaze",
+        }
         for id_type in id_types:
             attr = f"id_{id_type}"
             if not hasattr(self.metadata, attr):
