@@ -10,7 +10,7 @@
 
 mnamer (**m**edia re**namer**) is an intelligent and highly configurable media organization utility. It parses media filenames for metadata, searches the web to fill in the blanks, and then renames and moves them.
 
-Currently it has integration support with [TVDb](https://thetvdb.com) and [TvMaze](https://www.tvmaze.com) for television episodes and [TMDb](https://www.themoviedb.org/) and [OMDb](https://www.omdbapi.com) for movies.
+Currently it has integration support with [TVDb](https://thetvdb.com), [TvMaze](https://www.tvmaze.com), [AniDB](https://anidb.net), and [AniList](https://anilist.co) for television episodes and [TMDb](https://www.themoviedb.org/) and [OMDb](https://www.omdbapi.com) for movies.
 
 <img src="https://github.com/jkwill87/mnamer/raw/main/assets/screenshot.png" width="750"/>
 
@@ -64,7 +64,7 @@ PARAMETERS:
   --movie-api={*tmdb,omdb}: set movie api provider
   --movie-directory: set movie relocation directory
   --movie-format: set movie renaming format specification
-  --episode-api={tvdb,*tvmaze}: set episode api provider
+  --episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider
   --episode-directory: set episode relocation directory
   --episode-format: set episode renaming format specification
 
@@ -81,12 +81,27 @@ DIRECTIVES:
   --id-tmdb=<ID>: specify a TMDb movie id override
   --id-tvdb=<ID>: specify a TVDb series id override
   --id-tvmaze=<ID>: specify a TvMaze series id override
+  --id-anidb=<ID>: specify an AniDB anime id override
+  --id-anilist=<ID>: specify an AniList anime id override
   --no-cache: disable request cache
   --media={movie,episode}: override media detection
   --test: mocks the renaming and moving of files
 ```
 
 Parameters can either by entered as command line arguments or from a config file named `.mnamer-v2.json`.
+
+### Anime providers
+
+AniList can search anime titles without credentials:
+
+`$ mnamer --episode-api=anilist "One Piece - E1000.mkv"`
+
+AniDB supplies episode titles and air dates. Its HTTP API requires a registered
+client identifier and version, provided through `API_KEY_ANIDB` and
+`API_VERSION_ANIDB` (or `api_key_anidb` in `.mnamer-v2.json`). Use
+`--id-anidb=<ID>` when a filename needs an exact AniDB anime record. AniDB title
+searches use AniList's cross-provider links to find the AniDB id, then retrieve
+the episode data from AniDB.
 
 ## Contributions
 

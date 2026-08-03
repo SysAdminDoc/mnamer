@@ -1,6 +1,8 @@
 """Provides a low-level interface for metadata media APIs."""
 
 import datetime
+import re
+import xml.etree.ElementTree as ET
 from re import match
 from time import sleep
 
@@ -10,10 +12,182 @@ from mnamer.exceptions import (
     MnamerNotFoundException,
 )
 from mnamer.language import Language
-from mnamer.utils import clean_dict, parse_date, request_json
+from mnamer.utils import clean_dict, parse_date, request_json, request_text
 
 OMDB_PLOT_TYPES = {"short", "long"}
 MAX_RETRIES = 5
+ANILIST_URL = "https://graphql.anilist.co"
+ANIDB_URL = "http://api.anidb.net:9001/httpapi"
+XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
+
+ANILIST_MEDIA_FIELDS = """
+    id
+    title { romaji english native userPreferred }
+    description(asHtml: false)
+    startDate { year month day }
+    episodes
+    externalLinks { site url }
+"""
+
+
+def _anilist_payload(query: str, variables: dict, cache: bool) -> dict:
+    status, content = request_json(
+        ANILIST_URL,
+        body={"query": query, "variables": variables},
+        headers={"accept": "application/json"},
+        cache=cache,
+    )
+    if status == 404:
+        raise MnamerNotFoundException
+    if status != 200 or not isinstance(content, dict):  # pragma: no cover
+        raise MnamerNetworkException("AniList down or unavailable?")
+    if content.get("errors"):
+        raise MnamerNetworkException("AniList returned an invalid response")
+    return content
+
+
+def anilist_media(
+    id_anilist: str | int,
+    cache: bool = True,
+) -> dict:
+    """Look up one anime by its AniList id."""
+    try:
+        media_id = int(id_anilist)
+    except (TypeError, ValueError):
+        raise MnamerException("id_anilist must be an integer") from None
+    if media_id < 1:
+        raise MnamerException("id_anilist must be greater than zero")
+    query = f"""
+    query ($id: Int!) {{
+        Media(id: $id, type: ANIME) {{{ANILIST_MEDIA_FIELDS}
+        }}
+    }}
+    """
+    content = _anilist_payload(query, {"id": media_id}, cache)
+    media = content.get("data", {}).get("Media")
+    if not media:
+        raise MnamerNotFoundException
+    return media
+
+
+def anilist_search(
+    title: str,
+    page: int = 1,
+    per_page: int = 10,
+    cache: bool = True,
+) -> dict:
+    """Search AniList anime entries by title."""
+    if not title:
+        raise MnamerException("title must be specified")
+    if page < 1:
+        raise MnamerException("page must be greater than zero")
+    if per_page < 1 or per_page > 50:
+        raise MnamerException("per_page must be between 1 and 50")
+    query = f"""
+    query ($search: String!, $page: Int!, $perPage: Int!) {{
+        Page(page: $page, perPage: $perPage) {{
+            pageInfo {{ currentPage hasNextPage lastPage }}
+            media(search: $search, type: ANIME) {{{ANILIST_MEDIA_FIELDS}
+            }}
+        }}
+    }}
+    """
+    content = _anilist_payload(
+        query,
+        {"search": title, "page": page, "perPage": per_page},
+        cache,
+    )
+    page_data = content.get("data", {}).get("Page", {})
+    if not page_data.get("media"):
+        raise MnamerNotFoundException
+    return page_data
+
+
+def _anidb_title(titles: list[ET.Element], language: Language | None) -> str | None:
+    preferred_languages = [language.a2] if language else []
+    preferred_languages.extend(["en", "x-jat"])
+    preferred_types = ("official", "main", "short", "synonym")
+    for language_code in preferred_languages:
+        for title_type in preferred_types:
+            for title in titles:
+                if title.attrib.get(XML_LANG) != language_code:
+                    continue
+                if title.attrib.get("type") == title_type and title.text:
+                    return title.text.strip()
+    return next((title.text.strip() for title in titles if title.text), None)
+
+
+def _anidb_episode_number(value: str | None) -> int | None:
+    result = re.search(r"\d+", value or "")
+    return int(result.group()) if result else None
+
+
+def anidb_anime(
+    client: str,
+    client_version: int,
+    id_anidb: str | int,
+    language: Language | None = None,
+    cache: bool = True,
+) -> dict:
+    """Retrieve and normalize an anime record from AniDB's HTTP XML API."""
+    if not client:
+        raise MnamerException("anidb client identifier must be specified")
+    try:
+        client_version = int(client_version)
+        anime_id = int(id_anidb)
+    except (TypeError, ValueError):
+        raise MnamerException("AniDB client version and id must be integers") from None
+    if client_version < 1 or anime_id < 1:
+        raise MnamerException("AniDB client version and id must be greater than zero")
+    status, content = request_text(
+        ANIDB_URL,
+        parameters={
+            "request": "anime",
+            "client": client.lower(),
+            "clientver": client_version,
+            "protover": 1,
+            "aid": anime_id,
+        },
+        cache=cache,
+    )
+    if status == 404 or not content:
+        raise MnamerNotFoundException
+    if status != 200:  # pragma: no cover
+        raise MnamerNetworkException("AniDB down or unavailable?")
+    try:
+        root = ET.fromstring(content)
+    except ET.ParseError as error:  # pragma: no cover
+        raise MnamerNetworkException("AniDB returned invalid XML") from error
+    if root.tag == "error" or root.tag != "anime":
+        raise MnamerNotFoundException
+
+    titles = list(root.findall("./titles/title"))
+    episodes = []
+    for episode in root.findall("./episodes/episode"):
+        epno = episode.find("./epno")
+        number = _anidb_episode_number(epno.text if epno is not None else None)
+        if number is None:
+            continue
+        episode_titles = list(episode.findall("./title"))
+        if not episode_titles:
+            episode_titles = list(episode.findall("./titles/title"))
+        airdate = episode.findtext("./airdate") or None
+        episodes.append(
+            {
+                "id": episode.attrib.get("id"),
+                "number": number,
+                "type": epno.attrib.get("type", "1") if epno is not None else "1",
+                "air_date": airdate,
+                "title": _anidb_title(episode_titles, language),
+            }
+        )
+    return {
+        "id": root.attrib.get("id", str(anime_id)),
+        "title": _anidb_title(titles, language),
+        "start_date": root.findtext("./startdate") or None,
+        "synopsis": root.findtext("./description") or None,
+        "episodes": episodes,
+    }
 
 
 def omdb_title(

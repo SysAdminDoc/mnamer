@@ -277,6 +277,55 @@ def request_json(
     return status, (content or {})
 
 
+def request_text(
+    url,
+    parameters: dict | list | None = None,
+    body: dict | None = None,
+    headers: dict | None = None,
+    cache: bool = True,
+) -> tuple[int, str]:
+    """Queries a URL and returns its status code and text body."""
+    assert url
+    session = get_session()
+
+    if isinstance(headers, dict):
+        headers = clean_dict(headers)
+    else:
+        headers = {}
+    if isinstance(parameters, dict):
+        parameters = [(k, v) for k, v in clean_dict(parameters).items()]
+    if body:
+        method = "POST"
+        headers["content-type"] = "application/json"
+        headers["content-length"] = str(len(body))
+    else:
+        method = "GET"
+    headers["user-agent"] = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
+        "like Gecko) Chrome/79.0.3945.88 Safari/537.36"
+    )
+
+    initial_cache_state = session._disabled  # type: ignore[attr-defined]
+    try:
+        session._disabled = not cache  # type: ignore[attr-defined]
+        response = session.request(
+            url=url,
+            params=parameters,
+            json=body,
+            headers=headers,
+            method=method,
+            timeout=1,
+        )
+        status = response.status_code
+        content = response.text if status // 100 == 2 else ""
+    except Exception:
+        content = ""
+        status = 500
+    finally:
+        session._disabled = initial_cache_state  # type: ignore[attr-defined]
+    return status, content
+
+
 def str_fix_padding(s: str) -> str:
     """Truncates and collapses whitespace and delimiters in strings."""
     len_before = len(s)

@@ -25,6 +25,8 @@ class MessageType(Enum):
 class ProviderType(Enum):
     TVDB = "tvdb"
     TVMAZE = "tvmaze"
+    ANIDB = "anidb"
+    ANILIST = "anilist"
     TMDB = "tmdb"
     OMDB = "omdb"
 

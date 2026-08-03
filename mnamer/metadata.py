@@ -146,6 +146,8 @@ class MetadataEpisode(Metadata):
     episode: int | None = None
     date: dt.date | None = None
     title: str | None = None
+    id_anidb: str | None = None
+    id_anilist: str | None = None
     id_tvdb: str | None = None
     id_tvmaze: str | None = None
 

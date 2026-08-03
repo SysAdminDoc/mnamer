@@ -189,11 +189,16 @@ class SettingStore:
     episode_api: ProviderType | str = dataclasses.field(
         default=ProviderType.TVMAZE,
         metadata=SettingSpec(
-            choices=[ProviderType.TVDB.value, ProviderType.TVMAZE.value],
+            choices=[
+                ProviderType.TVDB.value,
+                ProviderType.TVMAZE.value,
+                ProviderType.ANIDB.value,
+                ProviderType.ANILIST.value,
+            ],
             dest="episode_api",
             flags=["--episode_api", "--episode-api", "--episodeapi"],
             group=SettingType.PARAMETER,
-            help="--episode-api={tvdb,*tvmaze}: set episode api provider",
+            help="--episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider",
         ).as_dict(),
     )
     episode_directory: Path | None = dataclasses.field(
@@ -300,6 +305,22 @@ class SettingStore:
             help="--id-tvmaze=<ID>: specify a TvMaze series id override",
         ).as_dict(),
     )
+    id_anidb: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            flags=["--id_anidb", "--id-anidb", "--idanidb"],
+            group=SettingType.DIRECTIVE,
+            help="--id-anidb=<ID>: specify an AniDB anime id override",
+        ).as_dict(),
+    )
+    id_anilist: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            flags=["--id_anilist", "--id-anilist", "--idanilist"],
+            group=SettingType.DIRECTIVE,
+            help="--id-anilist=<ID>: specify an AniList anime id override",
+        ).as_dict(),
+    )
     no_cache: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(
@@ -344,6 +365,14 @@ class SettingStore:
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
     )
     api_key_tvmaze: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
+    )
+    api_key_anidb: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
+    )
+    api_key_anilist: str | None = dataclasses.field(
         default=None,
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
     )
