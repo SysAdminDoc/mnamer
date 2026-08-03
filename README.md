@@ -50,6 +50,7 @@ PARAMETERS:
   arguments will take precedence.
 
   -b, --batch: process automatically without interactive prompts
+  --artwork: download Fanart.tv poster, fanart, and logo files
   -l, --lower: rename files using lowercase characters
   -r, --recurse: search for files within nested directories
   -s, --scene: use dots in place of alphanumeric chars
@@ -102,6 +103,11 @@ client identifier and version, provided through `API_KEY_ANIDB` and
 `--id-anidb=<ID>` when a filename needs an exact AniDB anime record. AniDB title
 searches use AniList's cross-provider links to find the AniDB id, then retrieve
 the episode data from AniDB.
+
+Artwork downloading is opt-in. Set `API_KEY_FANART` (or `api_key_fanart` in the
+configuration file) and pass `--artwork`; artwork is written as `poster`,
+`fanart`, and `logo` beside the renamed media when Fanart.tv has a matching
+TMDb/IMDb movie id or TVDb series id.
 
 ## Contributions
 

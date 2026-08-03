@@ -12,12 +12,19 @@ from mnamer.exceptions import (
     MnamerNotFoundException,
 )
 from mnamer.language import Language
-from mnamer.utils import clean_dict, parse_date, request_json, request_text
+from mnamer.utils import (
+    clean_dict,
+    parse_date,
+    request_bytes,
+    request_json,
+    request_text,
+)
 
 OMDB_PLOT_TYPES = {"short", "long"}
 MAX_RETRIES = 5
 ANILIST_URL = "https://graphql.anilist.co"
 ANIDB_URL = "http://api.anidb.net:9001/httpapi"
+FANART_URL = "https://webservice.fanart.tv/v3.2"
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 
 ANILIST_MEDIA_FIELDS = """
@@ -188,6 +195,43 @@ def anidb_anime(
         "synopsis": root.findtext("./description") or None,
         "episodes": episodes,
     }
+
+
+def fanart_images(
+    api_key: str,
+    media: str,
+    media_id: str | int,
+    cache: bool = True,
+) -> dict:
+    """Retrieve artwork metadata from Fanart.tv for a movie or TV series."""
+    if not api_key:
+        raise MnamerException("Fanart.tv API key must be specified")
+    resources = {"movie": "movies", "episode": "tv"}
+    if media not in resources:
+        raise MnamerException("Fanart.tv media must be movie or episode")
+    if not media_id:
+        raise MnamerNotFoundException
+    url = f"{FANART_URL}/{resources[media]}/{media_id}"
+    status, content = request_json(
+        url,
+        headers={"api-key": api_key},
+        cache=cache,
+    )
+    if status == 401:
+        raise MnamerException("invalid Fanart.tv API key")
+    if status == 404 or not content:
+        raise MnamerNotFoundException
+    if status != 200 or not isinstance(content, dict):  # pragma: no cover
+        raise MnamerNetworkException("Fanart.tv down or unavailable?")
+    return content
+
+
+def fanart_image(url: str, cache: bool = True) -> bytes:
+    """Download one artwork image from a URL returned by Fanart.tv."""
+    status, content = request_bytes(url, cache=cache)
+    if status != 200 or not content:  # pragma: no cover
+        raise MnamerNetworkException("Fanart.tv image unavailable?")
+    return content
 
 
 def omdb_title(

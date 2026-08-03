@@ -201,6 +201,15 @@ class SettingStore:
             help="--episode-api={tvdb,*tvmaze,anidb,anilist}: set episode api provider",
         ).as_dict(),
     )
+    artwork: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--artwork"],
+            group=SettingType.PARAMETER,
+            help="--artwork: download Fanart.tv poster, fanart, and logo files",
+        ).as_dict(),
+    )
     episode_directory: Path | None = dataclasses.field(
         default=None,
         metadata=SettingSpec(
@@ -373,6 +382,10 @@ class SettingStore:
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
     )
     api_key_anilist: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
+    )
+    api_key_fanart: str | None = dataclasses.field(
         default=None,
         metadata=SettingSpec(group=SettingType.CONFIGURATION).as_dict(),
     )

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import datetime as dt
-from os import path
+from os import environ, path
 from pathlib import Path
 from shutil import move
 from typing import Any, ClassVar
+from urllib.parse import urlparse
 
 from guessit import guessit  # type: ignore
 
+from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie
@@ -35,6 +37,8 @@ class Target:
     _provider: Provider
     _has_moved: bool
     _has_renamed: bool
+    artwork_error: str | None
+    artwork_downloaded: list[Path]
     _raw_metadata: dict[str, str]
     _parsed_metadata: Metadata
 
@@ -46,6 +50,8 @@ class Target:
         self._settings = settings or SettingStore()
         self._has_moved = False
         self._has_renamed = False
+        self.artwork_error = None
+        self.artwork_downloaded = []
         self._parse(file_path)
         self._replace_before()
         self._override_metadata_ids()
@@ -242,7 +248,114 @@ class Target:
         """Performs the action of renaming and/or moving a file."""
         destination_path = Path(self.destination).resolve()
         destination_path.parent.mkdir(parents=True, exist_ok=True)
+        artwork = self._prepare_artwork(destination_path.parent)
         try:
             move(str(self.source), destination_path)
         except OSError as e:  # pragma: no cover
             raise MnamerException from e
+        self._write_artwork(artwork)
+
+    @staticmethod
+    def _artwork_sources(media_type: MediaType) -> dict[str, tuple[str, ...]]:
+        if media_type is MediaType.MOVIE:
+            return {
+                "poster": ("movieposter",),
+                "fanart": ("moviebackground",),
+                "logo": ("hdmovielogo", "movielogo"),
+            }
+        return {
+            "poster": ("tvposter",),
+            "fanart": ("showbackground", "tvbackground"),
+            "logo": ("hdtvlogo", "clearlogo"),
+        }
+
+    def _artwork_id(self) -> str | None:
+        if isinstance(self.metadata, MetadataMovie):
+            return str(self.metadata.id_tmdb or self.metadata.id_imdb or "") or None
+        if isinstance(self.metadata, MetadataEpisode):
+            return str(self.metadata.id_tvdb or "") or None
+        return None
+
+    def _select_artwork(self, images: list[dict]) -> dict | None:
+        if not images:
+            return None
+        language = self.metadata.language.a2 if self.metadata.language else None
+
+        def rank(image: dict) -> tuple[int, int]:
+            image_language = image.get("lang")
+            language_rank = (
+                3
+                if language and image_language == language
+                else 2
+                if image_language == "en"
+                else 1
+                if image_language == "00"
+                else 0
+            )
+            try:
+                likes = int(image.get("likes", 0))
+            except (TypeError, ValueError):
+                likes = 0
+            return language_rank, likes
+
+        return max(images, key=rank)
+
+    def _prepare_artwork(self, directory: Path) -> list[tuple[Path, bytes]]:
+        if not self._settings.artwork:
+            return []
+        api_key = self._settings.api_key_fanart or environ.get("API_KEY_FANART")
+        artwork_id = self._artwork_id()
+        if not artwork_id:
+            return []
+        try:
+            response = fanart_images(
+                api_key or "",
+                self.metadata.to_media_type().value,
+                artwork_id,
+                cache=not self._settings.no_cache,
+            )
+        except MnamerException as error:
+            self.artwork_error = str(error)
+            return []
+        prepared = []
+        for name, categories in self._artwork_sources(
+            self.metadata.to_media_type()
+        ).items():
+            entry = next(
+                (
+                    selected
+                    for category in categories
+                    for selected in [
+                        self._select_artwork(response.get(category, []))
+                    ]
+                    if selected
+                ),
+                None,
+            )
+            if not entry or not entry.get("url"):
+                continue
+            suffix = Path(urlparse(entry["url"]).path).suffix.lower()
+            if suffix not in {".jpeg", ".jpg", ".png", ".webp"}:
+                suffix = ".jpg"
+            destination = directory / f"{name}{suffix}"
+            if destination.exists():
+                continue
+            try:
+                content = fanart_image(
+                    entry["url"],
+                    cache=not self._settings.no_cache,
+                )
+            except MnamerException as error:
+                self.artwork_error = str(error)
+                continue
+            prepared.append((destination, content))
+        return prepared
+
+    def _write_artwork(self, artwork: list[tuple[Path, bytes]]) -> None:
+        for destination, content in artwork:
+            try:
+                destination.write_bytes(content)
+            except OSError as error:  # pragma: no cover
+                self.artwork_error = str(error)
+            else:
+                self.artwork_downloaded.append(destination)

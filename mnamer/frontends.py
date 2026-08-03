@@ -185,6 +185,16 @@ class Cli(Frontend):
             tty.msg("FAILED!", MessageType.ERROR)
         else:
             tty.msg("OK!", MessageType.SUCCESS)
+            if target.artwork_error:
+                tty.msg(
+                    f"artwork unavailable: {target.artwork_error}",
+                    MessageType.ALERT,
+                )
+            elif target.artwork_downloaded:
+                tty.msg(
+                    f"downloaded {len(target.artwork_downloaded)} artwork file(s)",
+                    MessageType.SUCCESS,
+                )
             self.success_count += 1
 
     def _report_results(self) -> None:

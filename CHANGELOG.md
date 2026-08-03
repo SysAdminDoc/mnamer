@@ -7,6 +7,8 @@ All notable changes to mnamer will be documented in this file.
 - Added AniDB XML and AniList GraphQL providers for anime episode metadata.
 - Added anime provider selection and AniDB/AniList id overrides to the CLI and
   configuration file.
+- Added opt-in Fanart.tv poster, fanart, and logo downloads alongside relocated
+  media files.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -326,6 +326,35 @@ def request_text(
     return status, content
 
 
+def request_bytes(url, cache: bool = True) -> tuple[int, bytes]:
+    """Queries a URL and returns its status code and binary body."""
+    assert url
+    session = get_session()
+    headers = {
+        "user-agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
+        )
+    }
+    initial_cache_state = session._disabled  # type: ignore[attr-defined]
+    try:
+        session._disabled = not cache  # type: ignore[attr-defined]
+        response = session.request(
+            url=url,
+            headers=headers,
+            method="GET",
+            timeout=1,
+        )
+        status = response.status_code
+        content = response.content if status // 100 == 2 else b""
+    except Exception:
+        content = b""
+        status = 500
+    finally:
+        session._disabled = initial_cache_state  # type: ignore[attr-defined]
+    return status, content
+
+
 def str_fix_padding(s: str) -> str:
     """Truncates and collapses whitespace and delimiters in strings."""
     len_before = len(s)
