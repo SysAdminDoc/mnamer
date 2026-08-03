@@ -252,35 +252,54 @@ class Tmdb(Provider):
         page = 1
         page_max = 5  # each page yields a maximum of 20 results
         found = False
-        while True:
-            response = tmdb_search_movies(
-                self.api_key,
-                name,
-                year,
-                language,
-                page=page,
-                cache=self.cache,
-            )
-            for entry in response["results"]:
-                try:
-                    meta = MetadataMovie(
-                        id_tmdb=entry["id"],
-                        name=entry["title"],
-                        language=language,
-                        synopsis=entry["overview"],
-                        year=entry["release_date"],
-                    )
-                    if not meta.year:
+        year_from, year_to = year_range_parse(year, 1)
+        parsed_year = year_parse(str(year)) if year is not None else None
+        search_years = (
+            [None]
+            if parsed_year is None
+            else [parsed_year, parsed_year - 1, parsed_year + 1]
+        )
+        seen_ids = set()
+        for search_year in search_years:
+            page = 1
+            while True:
+                response = tmdb_search_movies(
+                    self.api_key,
+                    name,
+                    search_year,
+                    language,
+                    page=page,
+                    cache=self.cache,
+                )
+                for entry in response["results"]:
+                    try:
+                        if entry["id"] in seen_ids:
+                            continue
+                        meta = MetadataMovie(
+                            id_tmdb=entry["id"],
+                            name=entry["title"],
+                            language=language,
+                            synopsis=entry["overview"],
+                            year=entry["release_date"],
+                        )
+                        if not meta.year:
+                            continue
+                        if year is not None:
+                            release_year = year_parse(str(meta.year))
+                            if release_year is None or not (
+                                year_from <= release_year <= year_to
+                            ):
+                                continue
+                        seen_ids.add(entry["id"])
+                        yield meta
+                        found = True
+                    except (AttributeError, KeyError, TypeError, ValueError):
                         continue
-                    yield meta
-                    found = True
-                except (AttributeError, KeyError, TypeError, ValueError):
-                    continue
-            if page == response["total_pages"]:
-                break
-            elif page >= page_max:
-                break
-            page += 1
+                if page == response["total_pages"]:
+                    break
+                elif page >= page_max:
+                    break
+                page += 1
         if not found:
             raise MnamerNotFoundException
 

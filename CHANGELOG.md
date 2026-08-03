@@ -15,6 +15,8 @@ All notable changes to mnamer will be documented in this file.
   targets with online-provider fallback.
 - Added per-provider circuit breaking after repeated network failures so batch
   processing fails fast while an API is unavailable.
+- TMDb movie title searches now include the adjacent release years to tolerate
+  late-December catalog and filename year boundaries.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -46,6 +46,10 @@ Online providers use a per-provider circuit breaker. Three consecutive network
 failures open the circuit for 30 seconds so a batch fails fast while an API is
 unavailable; a successful retry closes it again.
 
+Movie title searches include the parsed release year plus the adjacent years,
+which covers releases whose filesystem year differs from the catalog year at a
+December boundary.
+
 🧰 [**Settings**](https://github.com/jkwill87/mnamer/wiki/Settings)
 
 ```
