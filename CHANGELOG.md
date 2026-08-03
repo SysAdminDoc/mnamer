@@ -20,6 +20,8 @@ All notable changes to mnamer will be documented in this file.
 - Multi-episode filenames now retain all detected episode numbers and expose an
   `{episode_range}` format value while preserving the existing first-episode
   provider lookup behavior.
+- Text-based subtitles without a filename language code now receive a
+  conservative automatic language detection result when the dialogue is clear.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

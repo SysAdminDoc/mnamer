@@ -17,6 +17,7 @@ from mnamer.language import Language
 from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMusic
 from mnamer.providers import LocalNfo, Provider
 from mnamer.setting_store import SettingStore
+from mnamer.subtitles import detect_subtitle_language
 from mnamer.types import MediaType, ProviderType
 from mnamer.utils import (
     crawl_in,
@@ -199,6 +200,8 @@ class Target:
             self.metadata.language_sub = path_data.get("subtitle_language")
         except MnamerException:
             pass
+        if not self.metadata.language_sub:
+            self.metadata.language_sub = detect_subtitle_language(self.source)
         if isinstance(self.metadata, MetadataMovie):
             self.metadata.name = path_data.get("title")
             self.metadata.year = path_data.get("year")
