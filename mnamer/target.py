@@ -22,6 +22,7 @@ from mnamer.metadata import Metadata, MetadataEpisode, MetadataMovie, MetadataMu
 from mnamer.providers import LocalNfo, Provider
 from mnamer.setting_store import SettingStore
 from mnamer.subtitles import detect_subtitle_language
+from mnamer.thumbnails import ThumbnailResult, create_thumbnail
 from mnamer.types import MediaType, ProviderType
 from mnamer.utils import (
     crawl_in,
@@ -47,6 +48,8 @@ class Target:
     artwork_error: str | None
     artwork_downloaded: list[Path]
     hook_error: str | None
+    thumbnail_error: str | None
+    thumbnail_generated: Path | None
     smart_match_error: str | None
     _raw_metadata: dict[str, str]
     _parsed_metadata: Metadata
@@ -62,6 +65,8 @@ class Target:
         self.artwork_error = None
         self.artwork_downloaded = []
         self.hook_error = None
+        self.thumbnail_error = None
+        self.thumbnail_generated = None
         self.smart_match_error = None
         self._parse(file_path)
         self._replace_before()
@@ -317,6 +322,7 @@ class Target:
             raise MnamerException from e
         self._write_artwork(artwork)
         record_move(self.source, destination_path)
+        self._write_thumbnail(destination_path)
         if self._settings.on_success:
             self.hook_error = run_success_hook(
                 self._settings.on_success,
@@ -324,6 +330,24 @@ class Target:
                 destination_path,
                 self.metadata,
             ).error
+
+    def _write_thumbnail(self, source: Path) -> None:
+        if not self._settings.thumbnails or is_subtitle(self.metadata.container):
+            return
+        destination = source.with_suffix(".jpg")
+        if destination.exists() and self._settings.no_overwrite:
+            self.thumbnail_error = "thumbnail destination already exists"
+            return
+        result: ThumbnailResult = create_thumbnail(
+            source,
+            destination,
+            str(self.metadata),
+            width=self._settings.thumbnail_width,
+        )
+        if result.error:
+            self.thumbnail_error = result.error
+        else:
+            self.thumbnail_generated = result.path
 
     @staticmethod
     def _artwork_sources(media_type: MediaType) -> dict[str, tuple[str, ...]]:

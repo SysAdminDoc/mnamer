@@ -47,6 +47,8 @@ DEFAULT_SETTINGS = {
     "smart_match": False,
     "targets": [],
     "test": False,
+    "thumbnail_width": 640,
+    "thumbnails": False,
     "tui": False,
     "undo": False,
     "watch": False,

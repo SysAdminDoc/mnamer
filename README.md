@@ -130,6 +130,8 @@ PARAMETERS:
   --music-directory: set music relocation directory
   --music-format: set music renaming format specification
   --smart-match: rerank title matches with sentence embeddings
+  --thumbnails: generate a burned-in JPEG beside moved media
+  --thumbnail-width=<PIXELS>: set generated thumbnail width
   --tui: preview, edit, accept, or reject files in a Textual UI
   --serve: run the remote preview web UI
   --serve-host=<HOST>: bind the web UI to this host
@@ -179,6 +181,12 @@ does not roll back a completed move.
 Use `mnamer --batch --dry-run-diff TARGET...` to review the planned relocations
 without changing files. Each candidate is printed as a standard unified diff;
 the same matching, overwrite, and subtitle checks as a real run still apply.
+
+Pass `--thumbnails` to extract a representative frame with ffmpeg, resize it
+to 640 pixels wide by default, and burn the matched title into a JPEG beside
+each relocated movie or episode. Set `--thumbnail-width` to change the width.
+Thumbnail generation is optional and non-fatal; if ffmpeg is unavailable the
+media move still completes and mnamer reports the reason.
 
 For RMM and log aggregation, pass `--log-format json`. Every emitted message is
 one JSON object with a UTC timestamp, level, message, debug flag, and structured

@@ -211,6 +211,16 @@ class Cli(Frontend):
                     f"post-action hook unavailable: {target.hook_error}",
                     MessageType.ALERT,
                 )
+            if target.thumbnail_error:
+                tty.msg(
+                    f"thumbnail unavailable: {target.thumbnail_error}",
+                    MessageType.ALERT,
+                )
+            elif target.thumbnail_generated:
+                tty.msg(
+                    f"generated thumbnail {target.thumbnail_generated}",
+                    MessageType.SUCCESS,
+                )
             self.success_count += 1
 
     def _report_results(self) -> None:

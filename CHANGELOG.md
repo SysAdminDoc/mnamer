@@ -41,6 +41,8 @@ All notable changes to mnamer will be documented in this file.
   and bind-mounted `/config` and `/mnt` volumes.
 - Added a dependency-free `--serve` web UI with JSON preview/process endpoints
   for remote NAS workflows.
+- Added optional ffmpeg-backed burned-in JPEG thumbnails for moved movies and
+  episodes via `--thumbnails`.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -108,6 +108,19 @@ def test_serve_flags():
     assert settings.serve_port == 9000
 
 
+def test_thumbnail_flags():
+    settings = SettingStore()
+    with patch.object(
+        sys,
+        "argv",
+        ["mnamer", "--thumbnails", "--thumbnail-width", "320"],
+    ):
+        settings.load()
+
+    assert settings.thumbnails is True
+    assert settings.thumbnail_width == 320
+
+
 def test_toml_config_supports_comments_and_trailing_commas(tmp_path):
     config = tmp_path / ".mnamer-v2.toml"
     config.write_text(

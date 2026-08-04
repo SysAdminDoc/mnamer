@@ -290,6 +290,24 @@ class SettingStore:
             help="--artwork: download Fanart.tv poster, fanart, and logo files",
         ).as_dict(),
     )
+    thumbnails: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--thumbnails", "--thumbnail"],
+            group=SettingType.PARAMETER,
+            help="--thumbnails: generate a burned-in JPEG beside moved media",
+        ).as_dict(),
+    )
+    thumbnail_width: int = dataclasses.field(
+        default=640,
+        metadata=SettingSpec(
+            flags=["--thumbnail-width"],
+            group=SettingType.PARAMETER,
+            help="--thumbnail-width=<PIXELS>: set generated thumbnail width",
+            typevar=int,
+        ).as_dict(),
+    )
     episode_directory: Path | None = dataclasses.field(
         default=None,
         metadata=SettingSpec(
