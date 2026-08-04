@@ -44,6 +44,7 @@ All notable changes to mnamer will be documented in this file.
 - Added optional ffmpeg-backed burned-in JPEG thumbnails for moved movies and
   episodes via `--thumbnails`.
 - Added a `--preset trash` naming preset with explicit-format overrides.
+- Added `mnamer.api` preview/process helpers for importable integrations.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -206,6 +206,18 @@ preview and batch processing. It binds to `127.0.0.1:8765` by default; set
 The service has no authentication, so keep the default loopback binding or
 place a LAN/reverse-proxy access boundary in front of it.
 
+Library integrations can use the same workflow without HTTP:
+
+```python
+from mnamer.api import preview_path, process_path
+
+preview = preview_path("incoming/movie.mkv", settings)
+destination = process_path("incoming/movie.mkv", settings)
+```
+
+Pass a configured `SettingStore` to keep provider, format, and safety settings
+explicit at the integration boundary.
+
 ### Anime providers
 
 AniList can search anime titles without credentials:
