@@ -56,3 +56,11 @@ def test_watch_flag():
         settings.load()
 
     assert settings.watch is True
+
+
+def test_undo_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--undo"]):
+        settings.load()
+
+    assert settings.undo is True

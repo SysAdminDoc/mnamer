@@ -13,6 +13,7 @@ from guessit import guessit  # type: ignore
 from mnamer.const import MUSIC_CONTAINERS
 from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
+from mnamer.journal import record_move
 from mnamer.language import Language
 from mnamer.matching import SmartMatchUnavailable, rank_matches
 from mnamer.media_tags import detect_media_tags
@@ -312,6 +313,7 @@ class Target:
         except OSError as e:  # pragma: no cover
             raise MnamerException from e
         self._write_artwork(artwork)
+        record_move(self.source, destination_path)
 
     @staticmethod
     def _artwork_sources(media_type: MediaType) -> dict[str, tuple[str, ...]]:

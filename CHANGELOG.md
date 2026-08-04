@@ -30,6 +30,7 @@ All notable changes to mnamer will be documented in this file.
   accept/reject actions.
 - Added optional `--watch` mode using watchdog for stable-file processing in
   Radarr/Sonarr-style ingestion folders.
+- Added `--undo` with a rotating move journal and safe reverse-order replay.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

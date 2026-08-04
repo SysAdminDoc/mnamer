@@ -131,9 +131,14 @@ DIRECTIVES:
   --no-cache: disable request cache
   --media={movie,episode,music}: override media detection
   --test: mocks the renaming and moving of files
+  --undo: replay the last session's recorded moves
 ```
 
 Parameters can either by entered as command line arguments or from a config file named `.mnamer-v2.json`.
+
+Every successful relocation is recorded in a rotating cache journal. Run
+`mnamer --undo` to replay the most recent session in reverse order. Undo skips
+missing destinations and existing sources rather than overwriting user changes.
 
 ### Anime providers
 

@@ -434,6 +434,15 @@ class SettingStore:
             help="--test: mocks the renaming and moving of files",
         ).as_dict(),
     )
+    undo: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--undo"],
+            group=SettingType.DIRECTIVE,
+            help="--undo: replay the last session's recorded moves",
+        ).as_dict(),
+    )
 
     # config-only attributes ---------------------------------------------------
 

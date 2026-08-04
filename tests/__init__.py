@@ -42,6 +42,7 @@ DEFAULT_SETTINGS = {
     "targets": [],
     "test": False,
     "tui": False,
+    "undo": False,
     "watch": False,
     "verbose": False,
     "version": False,

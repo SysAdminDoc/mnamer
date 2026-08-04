@@ -224,8 +224,10 @@ class Tui(Cli):
     """Textual preview frontend sharing target discovery with the CLI."""
 
     def launch(self) -> None:
+        from mnamer.journal import start_session
         from mnamer.tui import run_tui
 
+        start_session()
         self.success_count = run_tui(self.targets, self.settings)
         self._report_results()
 
@@ -234,8 +236,10 @@ class Watch(Cli):
     """Continuously process files created in one or more target folders."""
 
     def launch(self) -> None:
+        from mnamer.journal import start_session
         from mnamer.watch import run_watch
 
+        start_session()
         tty.msg("Starting mnamer watch", MessageType.HEADING)
         if self.targets:
             self._process_targets()
@@ -250,3 +254,24 @@ class Watch(Cli):
         if not target.source.exists() and target.destination.exists():
             return target.destination
         return None
+
+
+class Undo(Frontend):
+    """Replay the most recent CLI relocation session in reverse order."""
+
+    def launch(self) -> None:
+        from mnamer.journal import undo_last_session
+
+        result = undo_last_session()
+        if result.moved:
+            tty.msg(
+                f"undid {result.moved} recorded move(s)",
+                MessageType.SUCCESS,
+            )
+        if result.skipped:
+            tty.msg(
+                f"skipped {result.skipped} move(s) that were no longer safe",
+                MessageType.ALERT,
+            )
+        if not result.moved and not result.skipped:
+            tty.msg("no recorded moves to undo", MessageType.ALERT)
