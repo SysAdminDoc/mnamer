@@ -37,6 +37,8 @@ All notable changes to mnamer will be documented in this file.
 - TOML is now the default `.mnamer-v2.toml` configuration format, with comments,
   trailing commas, and legacy JSON loading retained.
 - Added `--log-format json` machine-readable output for RMM and log aggregation.
+- Updated the Docker image for amd64/arm64 Buildx releases, non-root execution,
+  and bind-mounted `/config` and `/mnt` volumes.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

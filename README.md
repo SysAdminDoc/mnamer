@@ -26,6 +26,27 @@ Check out the [wiki page](https://github.com/jkwill87/mnamer/wiki) for more deta
 
 `$ docker pull jkwill87/mnamer`
 
+The image targets both `linux/amd64` and `linux/arm64`, runs as the unprivileged
+`mnamer` user, and exposes `/config` and `/mnt` as volumes. Mount a directory
+containing `.mnamer-v2.toml` at `/config` and the media directory at `/mnt`:
+
+```console
+$ docker run --rm \
+    --mount type=bind,src=/path/to/mnamer-config,dst=/config \
+    --mount type=bind,src=/path/to/media,dst=/mnt \
+    jkwill87/mnamer --batch /mnt
+```
+
+Build and publish both architectures with Docker Buildx:
+
+```console
+$ docker buildx build --platform linux/amd64,linux/arm64 \
+    --tag jkwill87/mnamer:latest --push .
+```
+
+The default container UID and GID are both `1000`; rebuild with `--build-arg
+UID=... --build-arg GID=...` when the NAS volume requires a different owner.
+
 ✍️ [**Formatting**](https://github.com/jkwill87/mnamer/wiki/Formatting)
 
 Using the **episode-directory**, **episode-format**, **movie-directory**, **movie-format**, or **music-format** settings you customize how your files are renamed. Variables wrapped in braces `{}` get substituted with of parsed values of template field variables.
