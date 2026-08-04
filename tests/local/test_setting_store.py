@@ -121,6 +121,27 @@ def test_thumbnail_flags():
     assert settings.thumbnail_width == 320
 
 
+def test_trash_preset_can_be_overridden():
+    settings = SettingStore()
+    with patch.object(
+        sys,
+        "argv",
+        [
+            "mnamer",
+            "--preset",
+            "trash",
+            "--movie-format",
+            "{name}.{extension}",
+        ],
+    ):
+        settings.load()
+
+    assert settings.preset == "trash"
+    assert settings.movie_directory is None
+    assert settings.movie_format == "{name}.{extension}"
+    assert settings.episode_directory is None
+
+
 def test_toml_config_supports_comments_and_trailing_commas(tmp_path):
     config = tmp_path / ".mnamer-v2.toml"
     config.write_text(

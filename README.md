@@ -129,6 +129,7 @@ PARAMETERS:
   --music-api={*musicbrainz}: set music api provider
   --music-directory: set music relocation directory
   --music-format: set music renaming format specification
+  --preset={trash}: apply a built-in naming preset
   --smart-match: rerank title matches with sentence embeddings
   --thumbnails: generate a burned-in JPEG beside moved media
   --thumbnail-width=<PIXELS>: set generated thumbnail width
@@ -187,6 +188,12 @@ to 640 pixels wide by default, and burn the matched title into a JPEG beside
 each relocated movie or episode. Set `--thumbnail-width` to change the width.
 Thumbnail generation is optional and non-fatal; if ffmpeg is unavailable the
 media move still completes and mnamer reports the reason.
+
+Use `--preset trash` to apply the available-field equivalent of the [TRaSH
+Guides naming scheme](https://trash-guides.info/Radarr/Radarr-recommended-naming-scheme/):
+movie folders use `Title (Year)`, episodes use `Series/Season 01`, and filenames
+retain quality, audio, HDR, and release-group fields when present. Explicit
+format and directory settings override the preset.
 
 For RMM and log aggregation, pass `--log-format json`. Every emitted message is
 one JSON object with a UTC timestamp, level, message, debug flag, and structured

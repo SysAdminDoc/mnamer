@@ -9,6 +9,7 @@ from mnamer.const import MUSIC_CONTAINERS, SUBTITLE_CONTAINERS
 from mnamer.exceptions import MnamerException
 from mnamer.language import Language
 from mnamer.metadata import Metadata
+from mnamer.presets import PRESETS
 from mnamer.setting_spec import SettingSpec
 from mnamer.types import MediaType, ProviderType, SettingType
 from mnamer.utils import config_loads, crawl_out, normalize_containers
@@ -330,6 +331,15 @@ class SettingStore:
             help="--episode-format: set episode renaming format specification",
         ).as_dict(),
     )
+    preset: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            choices=["trash"],
+            flags=["--preset"],
+            group=SettingType.PARAMETER,
+            help="--preset={trash}: apply a built-in naming preset",
+        ).as_dict(),
+    )
     music_api: ProviderType | str = dataclasses.field(
         default=ProviderType.MUSICBRAINZ,
         metadata=SettingSpec(
@@ -623,6 +633,15 @@ class SettingStore:
             if v is not None and v is not Ellipsis:
                 setattr(self, k, v)
 
+    def apply_preset(self, name: str) -> None:
+        """Apply a built-in preset before explicit settings override it."""
+        try:
+            values = PRESETS[name]
+        except KeyError as error:
+            raise MnamerException(f"unknown preset: {name}") from error
+        for key, value in values.items():
+            setattr(self, key, value)
+
     def load(self) -> None:
         arg_loader = ArgLoader(*self.specifications())
         try:
@@ -634,8 +653,12 @@ class SettingStore:
             config_path = crawl_out(".mnamer-v2.toml") or crawl_out(".mnamer-v2.json")
         config = config_loads(str(config_path)) if config_path else {}
         if not self.config_ignore and not arguments.get("config_ignore"):
+            if config.get("preset"):
+                self.apply_preset(config["preset"])
             self.bulk_apply(config)
         if arguments:
+            if arguments.get("preset"):
+                self.apply_preset(arguments["preset"])
             self.bulk_apply(arguments)
         return None
 
