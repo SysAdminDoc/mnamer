@@ -94,6 +94,20 @@ def test_log_format_flag():
     assert settings.log_format == "json"
 
 
+def test_serve_flags():
+    settings = SettingStore()
+    with patch.object(
+        sys,
+        "argv",
+        ["mnamer", "--serve", "--serve-host", "0.0.0.0", "--serve-port", "9000"],
+    ):
+        settings.load()
+
+    assert settings.serve is True
+    assert settings.serve_host == "0.0.0.0"
+    assert settings.serve_port == 9000
+
+
 def test_toml_config_supports_comments_and_trailing_commas(tmp_path):
     config = tmp_path / ".mnamer-v2.toml"
     config.write_text(

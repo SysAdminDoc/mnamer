@@ -211,6 +211,32 @@ class SettingStore:
             help="--tui: preview, edit, accept, or reject files in a Textual UI",
         ).as_dict(),
     )
+    serve: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--serve"],
+            group=SettingType.PARAMETER,
+            help="--serve: run the remote preview web UI",
+        ).as_dict(),
+    )
+    serve_host: str = dataclasses.field(
+        default="127.0.0.1",
+        metadata=SettingSpec(
+            flags=["--serve-host"],
+            group=SettingType.PARAMETER,
+            help="--serve-host=<HOST>: bind the web UI to this host",
+        ).as_dict(),
+    )
+    serve_port: int = dataclasses.field(
+        default=8765,
+        metadata=SettingSpec(
+            flags=["--serve-port"],
+            group=SettingType.PARAMETER,
+            help="--serve-port=<PORT>: bind the web UI to this TCP port",
+            typevar=int,
+        ).as_dict(),
+    )
     watch: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

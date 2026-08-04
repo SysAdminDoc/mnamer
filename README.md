@@ -131,6 +131,9 @@ PARAMETERS:
   --music-format: set music renaming format specification
   --smart-match: rerank title matches with sentence embeddings
   --tui: preview, edit, accept, or reject files in a Textual UI
+  --serve: run the remote preview web UI
+  --serve-host=<HOST>: bind the web UI to this host
+  --serve-port=<PORT>: bind the web UI to this TCP port
   --watch: continuously process new files in target folders
   --on-success=<CMD>: run a command after each successful move
   --dry-run-diff: print a unified source-to-destination plan
@@ -180,6 +183,13 @@ the same matching, overwrite, and subtitle checks as a real run still apply.
 For RMM and log aggregation, pass `--log-format json`. Every emitted message is
 one JSON object with a UTC timestamp, level, message, debug flag, and structured
 `data` when the original message was a mapping or sequence.
+
+Use `mnamer --serve TARGET...` to open a dependency-free web UI for remote
+preview and batch processing. It binds to `127.0.0.1:8765` by default; set
+`--serve-host 0.0.0.0` for a NAS LAN interface and choose another port with
+`--serve-port`. Only files discovered from the supplied targets are exposed.
+The service has no authentication, so keep the default loopback binding or
+place a LAN/reverse-proxy access boundary in front of it.
 
 ### Anime providers
 

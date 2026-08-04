@@ -243,6 +243,17 @@ class Tui(Cli):
         self._report_results()
 
 
+class Web(Frontend):
+    """Serve a dependency-free remote preview and processing UI."""
+
+    def launch(self) -> None:
+        from mnamer.journal import start_session
+        from mnamer.web import run_web
+
+        start_session()
+        run_web(self.settings, self.targets)
+
+
 class Watch(Cli):
     """Continuously process files created in one or more target folders."""
 

@@ -3,7 +3,7 @@
 from mnamer import tty
 from mnamer.const import IS_DEBUG
 from mnamer.exceptions import MnamerException
-from mnamer.frontends import Cli, Tui, Undo, Watch
+from mnamer.frontends import Cli, Tui, Undo, Watch, Web
 from mnamer.setting_store import SettingStore
 
 
@@ -19,7 +19,9 @@ def main():  # pragma: no cover
         tty.error(e)
         raise SystemExit(2) from None
     try:
-        if settings.undo:
+        if settings.serve:
+            frontend = Web(settings)
+        elif settings.undo:
             frontend = Undo(settings)
         elif settings.watch:
             frontend = Watch(settings)

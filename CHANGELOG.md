@@ -39,6 +39,8 @@ All notable changes to mnamer will be documented in this file.
 - Added `--log-format json` machine-readable output for RMM and log aggregation.
 - Updated the Docker image for amd64/arm64 Buildx releases, non-root execution,
   and bind-mounted `/config` and `/mnt` volumes.
+- Added a dependency-free `--serve` web UI with JSON preview/process endpoints
+  for remote NAS workflows.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 
