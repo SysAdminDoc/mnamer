@@ -13,6 +13,7 @@ from guessit import guessit  # type: ignore
 from mnamer.const import MUSIC_CONTAINERS
 from mnamer.endpoints import fanart_image, fanart_images
 from mnamer.exceptions import MnamerException
+from mnamer.hooks import run_success_hook
 from mnamer.journal import record_move
 from mnamer.language import Language
 from mnamer.matching import SmartMatchUnavailable, rank_matches
@@ -45,6 +46,7 @@ class Target:
     _has_renamed: bool
     artwork_error: str | None
     artwork_downloaded: list[Path]
+    hook_error: str | None
     smart_match_error: str | None
     _raw_metadata: dict[str, str]
     _parsed_metadata: Metadata
@@ -59,6 +61,7 @@ class Target:
         self._has_renamed = False
         self.artwork_error = None
         self.artwork_downloaded = []
+        self.hook_error = None
         self.smart_match_error = None
         self._parse(file_path)
         self._replace_before()
@@ -314,6 +317,13 @@ class Target:
             raise MnamerException from e
         self._write_artwork(artwork)
         record_move(self.source, destination_path)
+        if self._settings.on_success:
+            self.hook_error = run_success_hook(
+                self._settings.on_success,
+                self.source,
+                destination_path,
+                self.metadata,
+            ).error
 
     @staticmethod
     def _artwork_sources(media_type: MediaType) -> dict[str, tuple[str, ...]]:

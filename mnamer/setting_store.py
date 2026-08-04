@@ -220,6 +220,14 @@ class SettingStore:
             help="--watch: continuously process new files in target folders",
         ).as_dict(),
     )
+    on_success: str | None = dataclasses.field(
+        default=None,
+        metadata=SettingSpec(
+            flags=["--on-success"],
+            group=SettingType.PARAMETER,
+            help="--on-success=<CMD>: run a command after each successful move",
+        ).as_dict(),
+    )
     smart_match: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

@@ -31,6 +31,8 @@ All notable changes to mnamer will be documented in this file.
 - Added optional `--watch` mode using watchdog for stable-file processing in
   Radarr/Sonarr-style ingestion folders.
 - Added `--undo` with a rotating move journal and safe reverse-order replay.
+- Added `--on-success` post-action commands with source, destination, media, and
+  provider-id environment variables.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

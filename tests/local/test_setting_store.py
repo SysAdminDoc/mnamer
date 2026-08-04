@@ -64,3 +64,15 @@ def test_undo_flag():
         settings.load()
 
     assert settings.undo is True
+
+
+def test_on_success_flag():
+    settings = SettingStore()
+    with patch.object(
+        sys,
+        "argv",
+        ["mnamer", "--on-success", "refresh-library --quiet"],
+    ):
+        settings.load()
+
+    assert settings.on_success == "refresh-library --quiet"

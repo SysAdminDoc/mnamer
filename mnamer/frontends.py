@@ -200,6 +200,11 @@ class Cli(Frontend):
                     f"downloaded {len(target.artwork_downloaded)} artwork file(s)",
                     MessageType.SUCCESS,
                 )
+            if target.hook_error:
+                tty.msg(
+                    f"post-action hook unavailable: {target.hook_error}",
+                    MessageType.ALERT,
+                )
             self.success_count += 1
 
     def _report_results(self) -> None:

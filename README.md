@@ -111,6 +111,7 @@ PARAMETERS:
   --smart-match: rerank title matches with sentence embeddings
   --tui: preview, edit, accept, or reject files in a Textual UI
   --watch: continuously process new files in target folders
+  --on-success=<CMD>: run a command after each successful move
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
@@ -139,6 +140,12 @@ Parameters can either by entered as command line arguments or from a config file
 Every successful relocation is recorded in a rotating cache journal. Run
 `mnamer --undo` to replay the most recent session in reverse order. Undo skips
 missing destinations and existing sources rather than overwriting user changes.
+
+Use `--on-success` to invoke a post-action command after a real relocation.
+Commands are executed as argument lists without an implicit shell. The hook
+receives `MNAMER_SOURCE_PATH`, `MNAMER_TARGET_PATH`, `MNAMER_MEDIA_TYPE`, and
+any available `MNAMER_ID_*` metadata variables. A hook failure is reported but
+does not roll back a completed move.
 
 ### Anime providers
 
