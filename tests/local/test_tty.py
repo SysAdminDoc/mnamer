@@ -1,4 +1,6 @@
+import json
 from sys import platform
+from types import SimpleNamespace
 
 import pytest
 
@@ -63,3 +65,15 @@ def test_abort_helpers__no_style():
     assert helpers[1].label == "quit"
     assert isinstance(helpers[1].value, MnamerAbortException)
     assert helpers[1]._bracketed is True
+
+
+def test_json_log_format(capsys):
+    tty.configure(SimpleNamespace(verbose=False, no_style=False, log_format="json"))
+    tty.msg({"path": "movie.mkv"}, tty.MessageType.SUCCESS)
+    payload = json.loads(capsys.readouterr().out)
+    tty.log_format = "text"
+
+    assert payload["level"] == "success"
+    assert payload["data"] == {"path": "movie.mkv"}
+    assert payload["message"].startswith(" - path = movie.mkv")
+    assert payload["debug"] is False

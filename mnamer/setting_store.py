@@ -237,6 +237,15 @@ class SettingStore:
             help="--dry-run-diff: print a unified source-to-destination plan",
         ).as_dict(),
     )
+    log_format: str = dataclasses.field(
+        default="text",
+        metadata=SettingSpec(
+            choices=["text", "json"],
+            flags=["--log-format"],
+            group=SettingType.PARAMETER,
+            help="--log-format={*text,json}: choose text or JSON log output",
+        ).as_dict(),
+    )
     smart_match: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

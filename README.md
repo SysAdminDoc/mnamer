@@ -113,6 +113,7 @@ PARAMETERS:
   --watch: continuously process new files in target folders
   --on-success=<CMD>: run a command after each successful move
   --dry-run-diff: print a unified source-to-destination plan
+  --log-format={*text,json}: choose text or JSON log output
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
@@ -154,6 +155,10 @@ does not roll back a completed move.
 Use `mnamer --batch --dry-run-diff TARGET...` to review the planned relocations
 without changing files. Each candidate is printed as a standard unified diff;
 the same matching, overwrite, and subtitle checks as a real run still apply.
+
+For RMM and log aggregation, pass `--log-format json`. Every emitted message is
+one JSON object with a UTC timestamp, level, message, debug flag, and structured
+`data` when the original message was a mapping or sequence.
 
 ### Anime providers
 

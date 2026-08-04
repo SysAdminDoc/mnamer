@@ -86,6 +86,14 @@ def test_dry_run_diff_flag():
     assert settings.dry_run_diff is True
 
 
+def test_log_format_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--log-format", "json"]):
+        settings.load()
+
+    assert settings.log_format == "json"
+
+
 def test_toml_config_supports_comments_and_trailing_commas(tmp_path):
     config = tmp_path / ".mnamer-v2.toml"
     config.write_text(

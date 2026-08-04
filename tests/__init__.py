@@ -21,6 +21,7 @@ DEFAULT_SETTINGS = {
     "id_musicbrainz": None,
     "ignore": [".*sample.*", "^RARBG.*"],
     "lower": False,
+    "log_format": "text",
     "mask": [".avi", ".m4v", ".mp4", ".mkv", ".ts", ".wmv"]
     + SUBTITLE_CONTAINERS
     + MUSIC_CONTAINERS,

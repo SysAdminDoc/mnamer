@@ -36,6 +36,7 @@ All notable changes to mnamer will be documented in this file.
 - Added `--dry-run-diff` unified relocation plans without filesystem changes.
 - TOML is now the default `.mnamer-v2.toml` configuration format, with comments,
   trailing commas, and legacy JSON loading retained.
+- Added `--log-format json` machine-readable output for RMM and log aggregation.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

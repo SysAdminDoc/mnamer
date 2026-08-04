@@ -1,7 +1,11 @@
 """Provides an interface for handling user input and printing output."""
 
+import datetime as dt
+import json
 import traceback
 from collections.abc import Callable
+from enum import Enum
+from pathlib import Path
 from typing import Any
 
 from teletype import codes
@@ -18,6 +22,7 @@ from mnamer.utils import format_dict, format_exception, format_iter
 
 no_style: bool = False
 verbose: bool = False
+log_format: str = "text"
 
 
 def _chars() -> dict[str, str]:
@@ -62,11 +67,28 @@ def _msg_format(body: Any):
     return body
 
 
+def _json_value(body: Any) -> Any:
+    if body is None or isinstance(body, str | int | float | bool):
+        return body
+    if isinstance(body, Enum):
+        return _json_value(body.value)
+    if isinstance(body, Path):
+        return str(body)
+    if isinstance(body, dt.date | dt.datetime):
+        return body.isoformat()
+    if isinstance(body, dict):
+        return {str(key): _json_value(value) for key, value in body.items()}
+    if isinstance(body, list | tuple | set):
+        return [_json_value(value) for value in body]
+    return str(body)
+
+
 def configure(settings: SettingStore):
     """Sets class variables using a settings instance."""
-    global verbose, no_style
+    global log_format, verbose, no_style
     verbose = settings.verbose
     no_style = settings.no_style
+    log_format = settings.log_format
 
 
 def msg(
@@ -75,6 +97,18 @@ def msg(
     debug: bool = False,
 ):
     if debug and not verbose:
+        return
+    if log_format == "json":
+        value = _json_value(body)
+        payload = {
+            "timestamp": dt.datetime.now(dt.UTC).isoformat(),
+            "level": message_type.name.lower(),
+            "message": value if isinstance(value, str) else _msg_format(body),
+            "debug": debug,
+        }
+        if not isinstance(value, str):
+            payload["data"] = value
+        print(json.dumps(payload, ensure_ascii=True, default=str))
         return
     if no_style:
         print(_msg_format(body))
