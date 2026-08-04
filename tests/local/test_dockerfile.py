@@ -7,6 +7,7 @@ def test_dockerfile_is_multiarch_and_non_root():
     dockerfile = DOCKERFILE.read_text(encoding="utf-8")
 
     assert "FROM python:3.12-slim" in dockerfile
+    assert "ARG MNAMER_VERSION=2.6.1" in dockerfile
     assert "ARG UID=1000" in dockerfile
     assert "ARG GID=1000" in dockerfile
     assert "USER mnamer" in dockerfile

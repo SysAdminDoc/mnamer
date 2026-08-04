@@ -2,7 +2,7 @@
 
 All notable changes to mnamer will be documented in this file.
 
-## [Unreleased]
+## [v2.6.1] - 2026-08-03
 
 - Added AniDB XML and AniList GraphQL providers for anime episode metadata.
 - Added anime provider selection and AniDB/AniList id overrides to the CLI and
