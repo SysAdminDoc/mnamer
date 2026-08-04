@@ -89,68 +89,71 @@ class Cli(Frontend):
 
     def _process_targets(self) -> None:
         for target in self.targets:
-            self._announce_file(target)
-            self._list_details(target)
-
-            # find match for target
-            matches = []
-            try:
-                matches = target.query()
-            except MnamerNotFoundException:
-                tty.msg("no matches found", MessageType.ALERT)
-            except MnamerNetworkException:
-                tty.msg("network error", MessageType.ALERT)
-            if target.smart_match_error:
-                tty.msg(target.smart_match_error, MessageType.ALERT)
-            if not matches and self.settings.no_guess:
-                tty.msg("skipping (--no-guess)", MessageType.ALERT)
-                continue
-            try:
-                if self.settings.batch:
-                    match = matches[0] if matches else target.metadata
-                elif not matches:
-                    match = tty.metadata_guess(target.metadata)
-                else:
-                    match = tty.metadata_prompt(matches)
-            except MnamerSkipException:
-                tty.msg("skipping (user request)", MessageType.ALERT)
-                continue
-            except MnamerAbortException:
-                tty.msg("aborting (user request)", MessageType.ERROR)
+            if not self._process_target(target):
                 break
-            target.metadata.update(match)
 
-            if (
-                is_subtitle(target.metadata.container)
-                and not target.metadata.language_sub
-            ):
-                if self.settings.batch:
-                    tty.msg(
-                        "skipping (subtitle language can't be detected)",
-                        MessageType.ALERT,
-                    )
-                    continue
-                try:
-                    target.metadata.language_sub = tty.subtitle_prompt()
-                except MnamerSkipException:
-                    tty.msg("skipping (user request)", MessageType.ALERT)
-                    continue
-                except MnamerAbortException:
-                    tty.msg("aborting (user request)", MessageType.ERROR)
-                    break
+    def _process_target(self, target: Target) -> bool:
+        """Process one target and return whether the caller should continue."""
+        self._announce_file(target)
+        self._list_details(target)
 
-            # sanity check move
-            if target.destination == target.source:
+        # find match for target
+        matches = []
+        try:
+            matches = target.query()
+        except MnamerNotFoundException:
+            tty.msg("no matches found", MessageType.ALERT)
+        except MnamerNetworkException:
+            tty.msg("network error", MessageType.ALERT)
+        if target.smart_match_error:
+            tty.msg(target.smart_match_error, MessageType.ALERT)
+        if not matches and self.settings.no_guess:
+            tty.msg("skipping (--no-guess)", MessageType.ALERT)
+            return True
+        try:
+            if self.settings.batch:
+                match = matches[0] if matches else target.metadata
+            elif not matches:
+                match = tty.metadata_guess(target.metadata)
+            else:
+                match = tty.metadata_prompt(matches)
+        except MnamerSkipException:
+            tty.msg("skipping (user request)", MessageType.ALERT)
+            return True
+        except MnamerAbortException:
+            tty.msg("aborting (user request)", MessageType.ERROR)
+            return False
+        target.metadata.update(match)
+
+        if is_subtitle(target.metadata.container) and not target.metadata.language_sub:
+            if self.settings.batch:
                 tty.msg(
-                    "skipping (source and destination paths are the same)",
+                    "skipping (subtitle language can't be detected)",
                     MessageType.ALERT,
                 )
-                continue
-            if self.settings.no_overwrite and target.destination.exists():
-                tty.msg("skipping (--no-overwrite)", MessageType.ALERT)
-                continue
+                return True
+            try:
+                target.metadata.language_sub = tty.subtitle_prompt()
+            except MnamerSkipException:
+                tty.msg("skipping (user request)", MessageType.ALERT)
+                return True
+            except MnamerAbortException:
+                tty.msg("aborting (user request)", MessageType.ERROR)
+                return False
 
-            self._rename_and_move_file(target)
+        # sanity check move
+        if target.destination == target.source:
+            tty.msg(
+                "skipping (source and destination paths are the same)",
+                MessageType.ALERT,
+            )
+            return True
+        if self.settings.no_overwrite and target.destination.exists():
+            tty.msg("skipping (--no-overwrite)", MessageType.ALERT)
+            return True
+
+        self._rename_and_move_file(target)
+        return True
 
     def _announce_file(self, target: Target):
         media_type = target.metadata.to_media_type().value.title()
@@ -225,3 +228,25 @@ class Tui(Cli):
 
         self.success_count = run_tui(self.targets, self.settings)
         self._report_results()
+
+
+class Watch(Cli):
+    """Continuously process files created in one or more target folders."""
+
+    def launch(self) -> None:
+        from mnamer.watch import run_watch
+
+        tty.msg("Starting mnamer watch", MessageType.HEADING)
+        if self.targets:
+            self._process_targets()
+        run_watch(self.settings, self._process_watch_target)
+
+    def _process_watch_target(self, path):
+        if not path.is_file():
+            return None
+        target = Target(path, self.settings)
+        if not self._process_target(target):
+            return None
+        if not target.source.exists() and target.destination.exists():
+            return target.destination
+        return None

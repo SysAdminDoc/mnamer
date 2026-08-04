@@ -48,3 +48,11 @@ def test_tui_flag():
         settings.load()
 
     assert settings.tui is True
+
+
+def test_watch_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--watch"]):
+        settings.load()
+
+    assert settings.watch is True

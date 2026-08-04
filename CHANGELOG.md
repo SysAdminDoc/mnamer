@@ -28,6 +28,8 @@ All notable changes to mnamer will be documented in this file.
   detection for HDR, Dolby Vision, HLG, and Atmos tags.
 - Added optional `--tui` Textual preview mode with inline edits and per-file
   accept/reject actions.
+- Added optional `--watch` mode using watchdog for stable-file processing in
+  Radarr/Sonarr-style ingestion folders.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

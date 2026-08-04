@@ -211,6 +211,15 @@ class SettingStore:
             help="--tui: preview, edit, accept, or reject files in a Textual UI",
         ).as_dict(),
     )
+    watch: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--watch"],
+            group=SettingType.PARAMETER,
+            help="--watch: continuously process new files in target folders",
+        ).as_dict(),
+    )
     smart_match: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

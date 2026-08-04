@@ -28,6 +28,9 @@ smart-match = [
 tui = [
     "textual>=8.2,<9",
 ]
+watch = [
+    "watchdog>=6,<7",
+]
 
 
 [tool.setuptools]

@@ -48,6 +48,12 @@ absent, an installed `ffprobe` is queried briefly for stream metadata.
 For an interactive batch preview with per-file accept/reject and inline metadata
 editing, install `pip install "mnamer[tui]"` and run `mnamer --tui TARGET...`.
 
+For Radarr/Sonarr-style ingestion folders, install `pip install "mnamer[watch]"`
+and run `mnamer --watch --batch --recurse /downloads/complete`. Watch mode
+processes matching files already in the folder, then waits for new files to
+finish copying before processing them. Use `--no-overwrite` when the destination
+library must remain untouched.
+
 When a target has an adjacent `.nfo`, `.xml`, or `.json` sidecar, mnamer reads
 local movie, episode, music-video, and provider-ID metadata before contacting an
 online provider. This makes Jellyfin/Plex-compatible library exports
@@ -102,6 +108,9 @@ PARAMETERS:
   --music-api={*musicbrainz}: set music api provider
   --music-directory: set music relocation directory
   --music-format: set music renaming format specification
+  --smart-match: rerank title matches with sentence embeddings
+  --tui: preview, edit, accept, or reject files in a Textual UI
+  --watch: continuously process new files in target folders
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
