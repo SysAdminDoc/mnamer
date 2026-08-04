@@ -34,6 +34,8 @@ All notable changes to mnamer will be documented in this file.
 - Added `--on-success` post-action commands with source, destination, media, and
   provider-id environment variables.
 - Added `--dry-run-diff` unified relocation plans without filesystem changes.
+- TOML is now the default `.mnamer-v2.toml` configuration format, with comments,
+  trailing commas, and legacy JSON loading retained.
 
 ## [v0.1.0] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

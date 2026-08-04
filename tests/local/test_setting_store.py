@@ -84,3 +84,44 @@ def test_dry_run_diff_flag():
         settings.load()
 
     assert settings.dry_run_diff is True
+
+
+def test_toml_config_supports_comments_and_trailing_commas(tmp_path):
+    config = tmp_path / ".mnamer-v2.toml"
+    config.write_text(
+        """
+# Batch settings may be annotated.
+batch = true
+mask = ["mkv", "srt",]
+movie_format = "{name} ({year}).{extension}"
+""",
+        encoding="utf-8",
+    )
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--config-path", str(config)]):
+        settings.load()
+
+    assert settings.batch is True
+    assert settings.mask == [".mkv", ".srt"]
+
+
+def test_json_config_remains_compatible(tmp_path):
+    config = tmp_path / ".mnamer-v2.json"
+    config.write_text('{"batch": true, "mask": ["mp4"]}', encoding="utf-8")
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--config-path", str(config)]):
+        settings.load()
+
+    assert settings.batch is True
+    assert settings.mask == [".mp4"]
+
+
+def test_config_can_clear_list_values(tmp_path):
+    config = tmp_path / ".mnamer-v2.toml"
+    config.write_text("mask = []\nignore = []\n", encoding="utf-8")
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--config-path", str(config)]):
+        settings.load()
+
+    assert settings.mask == []
+    assert settings.ignore == []

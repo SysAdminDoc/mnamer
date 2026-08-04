@@ -3,6 +3,7 @@
 import datetime as dt
 import json
 import re
+import tomllib
 from collections.abc import Callable, Iterator
 from os import walk
 from os.path import exists, expanduser, expandvars, getsize, splitdrive, splitext
@@ -197,6 +198,23 @@ def json_loads(path: str) -> dict[str, Any]:
         with open(path) as fp:
             json_data = fp.read()
     return json.loads(json_data) if json_data else {}
+
+
+def toml_loads(path: str) -> dict[str, Any]:
+    """Load a TOML configuration file, returning an empty mapping if absent."""
+    path = expanduser(path)
+    path = expandvars(path)
+    if not exists(path):
+        return {}
+    with open(path, "rb") as fp:
+        return tomllib.load(fp)
+
+
+def config_loads(path: str) -> dict[str, Any]:
+    """Load the supported JSON compatibility or TOML configuration format."""
+    if Path(path).suffix.lower() == ".json":
+        return json_loads(path)
+    return toml_loads(path)
 
 
 def normalize_container(container: str) -> str:

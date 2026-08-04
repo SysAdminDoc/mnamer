@@ -11,7 +11,7 @@ from mnamer.language import Language
 from mnamer.metadata import Metadata
 from mnamer.setting_spec import SettingSpec
 from mnamer.types import MediaType, ProviderType, SettingType
-from mnamer.utils import crawl_out, json_loads, normalize_containers
+from mnamer.utils import config_loads, crawl_out, normalize_containers
 
 
 @dataclasses.dataclass
@@ -567,7 +567,7 @@ class SettingStore:
 
     def bulk_apply(self, d: dict[str, Any]):
         for k, v in d.items():
-            if v:
+            if v is not None and v is not Ellipsis:
                 setattr(self, k, v)
 
     def load(self) -> None:
@@ -576,8 +576,10 @@ class SettingStore:
             arguments = arg_loader.load()
         except RuntimeError as e:
             raise MnamerException(e) from e
-        config_path = arguments.get("config_path", crawl_out(".mnamer-v2.json"))
-        config = json_loads(str(config_path)) if config_path else {}
+        config_path = arguments.get("config_path")
+        if not config_path:
+            config_path = crawl_out(".mnamer-v2.toml") or crawl_out(".mnamer-v2.json")
+        config = config_loads(str(config_path)) if config_path else {}
         if not self.config_ignore and not arguments.get("config_ignore"):
             self.bulk_apply(config)
         if arguments:

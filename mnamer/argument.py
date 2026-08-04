@@ -13,14 +13,14 @@ POSITIONAL:
 
 PARAMETERS:
   The following flags can be used to customize mnamer's behaviour. Their long
-  forms may also be set in a '.mnamer-v2.json' config file, in which case cli
+  forms may also be set in a '.mnamer-v2.toml' config file, in which case cli
   arguments will take precedence.
 
   {parameter_options}
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
-  like overriding media detection. They can't be used in '.mnamer-v2.json'.
+  like overriding media detection. They can't be used in '.mnamer-v2.toml'.
 
   {directive_options}
 

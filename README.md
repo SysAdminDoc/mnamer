@@ -83,7 +83,7 @@ POSITIONAL:
 
 PARAMETERS:
   The following flags can be used to customize mnamer's behaviour. Their long
-  forms may also be set in a '.mnamer-v2.json' config file, in which case cli
+  forms may also be set in a '.mnamer-v2.toml' config file, in which case cli
   arguments will take precedence.
 
   -b, --batch: process automatically without interactive prompts
@@ -116,7 +116,7 @@ PARAMETERS:
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
-  like overriding media detection. They can't be used in '.mnamer-v2.json'.
+  like overriding media detection. They can't be used in '.mnamer-v2.toml'.
 
   -V, --version: display the running mnamer version number
   --clear-cache: clear request cache
@@ -136,7 +136,10 @@ DIRECTIVES:
   --undo: replay the last session's recorded moves
 ```
 
-Parameters can either by entered as command line arguments or from a config file named `.mnamer-v2.json`.
+Parameters can either be entered as command line arguments or from a TOML
+config file named `.mnamer-v2.toml`. TOML comments and trailing commas are
+supported. Existing `.mnamer-v2.json` files remain readable as a compatibility
+fallback; pass `--config-path` to select either format explicitly.
 
 Every successful relocation is recorded in a rotating cache journal. Run
 `mnamer --undo` to replay the most recent session in reverse order. Undo skips
@@ -160,7 +163,7 @@ AniList can search anime titles without credentials:
 
 AniDB supplies episode titles and air dates. Its HTTP API requires a registered
 client identifier and version, provided through `API_KEY_ANIDB` and
-`API_VERSION_ANIDB` (or `api_key_anidb` in `.mnamer-v2.json`). Use
+`API_VERSION_ANIDB` (or `api_key_anidb` in `.mnamer-v2.toml`). Use
 `--id-anidb=<ID>` when a filename needs an exact AniDB anime record. AniDB title
 searches use AniList's cross-provider links to find the AniDB id, then retrieve
 the episode data from AniDB.
