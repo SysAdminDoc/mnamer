@@ -76,3 +76,11 @@ def test_on_success_flag():
         settings.load()
 
     assert settings.on_success == "refresh-library --quiet"
+
+
+def test_dry_run_diff_flag():
+    settings = SettingStore()
+    with patch.object(sys, "argv", ["mnamer", "--dry-run-diff"]):
+        settings.load()
+
+    assert settings.dry_run_diff is True

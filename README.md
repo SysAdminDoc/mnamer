@@ -112,6 +112,7 @@ PARAMETERS:
   --tui: preview, edit, accept, or reject files in a Textual UI
   --watch: continuously process new files in target folders
   --on-success=<CMD>: run a command after each successful move
+  --dry-run-diff: print a unified source-to-destination plan
 
 DIRECTIVES:
   Directives are one-off arguments that are used to perform secondary tasks
@@ -146,6 +147,10 @@ Commands are executed as argument lists without an implicit shell. The hook
 receives `MNAMER_SOURCE_PATH`, `MNAMER_TARGET_PATH`, `MNAMER_MEDIA_TYPE`, and
 any available `MNAMER_ID_*` metadata variables. A hook failure is reported but
 does not roll back a completed move.
+
+Use `mnamer --batch --dry-run-diff TARGET...` to review the planned relocations
+without changing files. Each candidate is printed as a standard unified diff;
+the same matching, overwrite, and subtitle checks as a real run still apply.
 
 ### Anime providers
 

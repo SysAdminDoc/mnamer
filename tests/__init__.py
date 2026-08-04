@@ -9,6 +9,7 @@ DEFAULT_SETTINGS = {
     "batch": False,
     "config_dump": False,
     "config_ignore": False,
+    "dry_run_diff": False,
     "episode_api": ProviderType.TVMAZE,
     "episode_directory": None,
     "episode_format": "{series} - S{season:02}E{episode:02} - {title}.{extension}",

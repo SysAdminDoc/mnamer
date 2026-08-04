@@ -228,6 +228,15 @@ class SettingStore:
             help="--on-success=<CMD>: run a command after each successful move",
         ).as_dict(),
     )
+    dry_run_diff: bool = dataclasses.field(
+        default=False,
+        metadata=SettingSpec(
+            action="store_true",
+            flags=["--dry-run-diff"],
+            group=SettingType.PARAMETER,
+            help="--dry-run-diff: print a unified source-to-destination plan",
+        ).as_dict(),
+    )
     smart_match: bool = dataclasses.field(
         default=False,
         metadata=SettingSpec(

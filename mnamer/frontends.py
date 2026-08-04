@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from mnamer import tty
 from mnamer.const import SYSTEM, USAGE, VERSION
+from mnamer.diff import relocation_diff
 from mnamer.exceptions import (
     MnamerAbortException,
     MnamerException,
@@ -177,6 +178,11 @@ class Cli(Frontend):
         tty.msg("", debug=True)
 
     def _rename_and_move_file(self, target: Target):
+        if self.settings.dry_run_diff:
+            tty.msg("dry-run diff", MessageType.ALERT)
+            tty.msg(relocation_diff(target.source, target.destination))
+            self.success_count += 1
+            return
         tty.msg(
             f"moving to {target.destination.absolute()}",
             MessageType.SUCCESS,
