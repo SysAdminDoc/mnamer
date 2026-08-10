@@ -58,3 +58,53 @@ All notable changes to mnamer will be documented in this file.
 - Fixed: Fix typos
 - Inherits secrets between jobs
 - Prevents publish attempt from on-schedule event
+
+## Roadmap archive — 2026-08-10 — ROADMAP.md
+
+<details>
+<summary>Original roadmap snapshot</summary>
+
+```markdown
+# ROADMAP
+
+mnamer parses media filenames, resolves metadata from TVDb/TvMaze/TMDb/OMDb, and renames/moves files using customizable format templates.
+
+## Planned Features
+
+### Providers
+
+### Matching
+
+### UX
+
+### Ops
+
+## Competitive Research
+
+- **FileBot** — Closed-source gold standard; beats mnamer on anime matching and format presets. Worth studying their format spec for parity.
+- **Sonarr / Radarr** — Continuous-watch + PVR focus; mnamer is the batch-rename niche, but their rename-on-import API surface is a model for hooks
+- **tinyMediaManager** — GUI-driven, NFO-first. Reinforces the case for a local-NFO provider
+- **beets** (music) — Plugin architecture + replay-gain hooks; pattern to borrow for mnamer plugins
+
+## Nice-to-Haves
+
+## Open-Source Research (Round 2)
+
+### Related OSS Projects
+- https://github.com/Sonarr/Sonarr — TV automation standard; RSS-driven, push-to-client, ecosystem leader; mnamer's "indirect Sonarr integration" could become a supported post-processing hook
+- https://github.com/Radarr/Radarr — Sonarr's movie fork; same plugin + post-processing model
+- https://github.com/StrawberryStego/Simpler-FileBot — PySide6 GUI batch renamer using `guessit`; direct OSS alternative to the paid FileBot
+- https://github.com/rmatil/filebot — community mirror/reference for FileBot's AMC script patterns (archive extract → identify → rename → Plex notify)
+- https://trash-guides.info/Radarr/Radarr-recommended-naming-scheme/ — TRaSH Guides' canonical naming scheme (TMDb-first) — the community-standard format preset
+- https://github.com/guessit-io/guessit — the underlying filename-parsing library; worth bundling as a fallback provider when all online providers fail
+- https://github.com/topics/media-manager — adjacent tooling (tinyMediaManager, Jellyfin-compat tools) for cross-reference
+
+### Features to Borrow
+- PySide6 GUI reference (Simpler-FileBot) — informs the long-planned `--serve` web UI; a desktop GUI is another viable distribution form
+
+### Patterns & Architectures Worth Studying
+- Provider abstraction layer (already present; see TVDb/TvMaze/TMDb/OMDb) — extend to accept arbitrary user-supplied providers via entrypoints; AniDB, Kitsu, etc. become community plugins without core changes
+- Separate input/output directories as a hard contract (FileBot AMC convention) — `/downloads/complete → /media` — prevents half-renamed states and makes rollback trivial
+```
+
+</details>

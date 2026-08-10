@@ -20,7 +20,7 @@ def _load_model() -> Any:
     if _MODEL_INITIALIZED:
         return _MODEL
     try:
-        from sentence_transformers import (
+        from sentence_transformers import (  # type: ignore[import-not-found]
             SentenceTransformer,  # type: ignore[import-not-found]
         )
     except ImportError as error:
